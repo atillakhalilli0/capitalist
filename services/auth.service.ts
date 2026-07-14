@@ -3,6 +3,7 @@ import BaseService from "./base.service";
 import type {
   LoginRequest,
   LoginResponse,
+  RegisterRequest,
   RefreshTokenRequest,
   RefreshTokenResponse,
   ChangePasswordRequest,
@@ -14,6 +15,13 @@ import type {
 class AuthService extends BaseService {
   login(data: LoginRequest) {
     return this.post<LoginResponse>("/auth/login", data);
+  }
+
+  // Backend returns 200 with no body here - it does NOT log the user in
+  // (no tokens come back), so callers should redirect to /admin/login
+  // after this resolves rather than treating it like login().
+  register(data: RegisterRequest) {
+    return this.post<void>("/auth/register", data);
   }
 
   // Backend route is POST /api/Auth/refresh, and it only accepts

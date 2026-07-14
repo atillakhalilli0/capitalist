@@ -29,6 +29,23 @@ interface AuthState {
   setRefreshToken: (token: string) => void;
 }
 
+// proxy.ts (server middleware) can only read cookies, not localStorage,
+// so the access token has to be mirrored into a cookie here. This is a
+// plain (non-httpOnly) cookie set from the client, which is fine for
+// local dev but not how you'd want to do auth in production - a real
+// setup would have the backend set an httpOnly cookie directly.
+function setAccessTokenCookie(token: string | null) {
+  if (typeof document === "undefined") return;
+
+  if (!token) {
+    document.cookie =
+      "accessToken=; path=/; max-age=0";
+    return;
+  }
+
+  document.cookie = `accessToken=${token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -44,31 +61,40 @@ export const useAuthStore = create<AuthState>()(
         user,
         accessToken,
         refreshToken,
-      }) =>
+      }) => {
+        setAccessTokenCookie(accessToken);
+
         set({
           user,
           accessToken,
           refreshToken,
           isAuthenticated: true,
-        }),
+        });
+      },
 
-      logout: () =>
+      logout: () => {
+        setAccessTokenCookie(null);
+
         set({
           user: null,
           accessToken: null,
           refreshToken: null,
           isAuthenticated: false,
-        }),
+        });
+      },
 
       setUser: (user) =>
         set({
           user,
         }),
 
-      setAccessToken: (accessToken) =>
+      setAccessToken: (accessToken) => {
+        setAccessTokenCookie(accessToken);
+
         set({
           accessToken,
-        }),
+        });
+      },
 
       setRefreshToken: (refreshToken) =>
         set({

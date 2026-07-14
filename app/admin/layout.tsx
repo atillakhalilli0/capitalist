@@ -16,20 +16,31 @@ type AdminLayoutProps = Readonly<{
 export default function AdminLayout({
   children,
 }: AdminLayoutProps) {
+
   const pathname = usePathname();
 
   const router = useRouter();
+  const PUBLIC_ADMIN_ROUTES = [
+    "/admin/login",
+    "/admin/register",
+  ];
+
+  const isPublicRoute =
+    PUBLIC_ADMIN_ROUTES.includes(pathname);
 
   const { accessToken, isAuthenticated, logout } =
     useAuthStore();
 
-  const { data, isSuccess, isError } =
-    useProfile();
+  const {
+    data,
+    isSuccess,
+    isError,
+  } = useProfile({
+    enabled: !isPublicRoute && !!accessToken,
+  });
 
   useEffect(() => {
-    if (
-      pathname === "/admin/login"
-    ) {
+    if (isPublicRoute) {
       return;
     }
 
@@ -39,7 +50,7 @@ export default function AdminLayout({
   }, [
     accessToken,
     isAuthenticated,
-    pathname,
+    isPublicRoute,
     router,
   ]);
 
@@ -64,6 +75,10 @@ export default function AdminLayout({
   ]);
 
   if (pathname === "/admin/login") {
+    return children;
+  }
+
+  if (isPublicRoute) {
     return children;
   }
 

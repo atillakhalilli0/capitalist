@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:5239/api";
+  "http://localhost:5239/api/v1";
 
 class BaseService {
   protected api: AxiosInstance;

@@ -3,6 +3,19 @@ export interface LoginRequest {
   password: string;
 }
 
+// Matches backend's RegisterCommand exactly (see swagger:
+// components.schemas.RegisterCommand). firstName/lastName are optional
+// there, and the endpoint has no documented response body, so treat it
+// as void — after registering, send the user to /admin/login instead of
+// assuming they're auto-logged-in.
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
 export interface RefreshTokenRequest {
   accessToken: string;
   refreshToken: string;

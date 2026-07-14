@@ -13,6 +13,7 @@ import type {
   ChangePasswordRequest,
   ForgotPasswordRequest,
   LoginRequest,
+  RegisterRequest,
   RefreshTokenRequest,
   ResetPasswordRequest,
 } from "@/types/auth";
@@ -21,10 +22,20 @@ const QUERY_KEY = "auth";
 
 // NOTE: the backend has no /api/Auth/me route (see swagger). The
 // equivalent "who am I" data comes from GET /api/Users/profile instead.
-export function useProfile() {
+export function useProfile(
+  options?: { enabled?: boolean }
+) {
   return useQuery({
-    queryKey: [QUERY_KEY, "me"],
+    queryKey: ["auth", "me"],
     queryFn: () => userService.getProfile(),
+    enabled: options?.enabled,
+  });
+}
+
+export function useRegister() {
+  return useMutation({
+    mutationFn: (data: RegisterRequest) =>
+      authService.register(data),
   });
 }
 

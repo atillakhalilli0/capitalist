@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_ADMIN_ROUTES = [
   "/admin/login",
+  // TEMP: dev-only registration page so you can create the first user(s)
+  // while the DB is empty. Remove this route (and app/admin/register)
+  // once you have real accounts / an invite flow.
+  "/admin/register",
 ];
 
 export function proxy(
   request: NextRequest
 ) {
   const { pathname } = request.nextUrl;
-
   if (
     !pathname.startsWith("/admin")
   ) {
