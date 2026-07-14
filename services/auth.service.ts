@@ -16,13 +16,19 @@ class AuthService extends BaseService {
     return this.post<LoginResponse>("/auth/login", data);
   }
 
+  // Backend route is POST /api/Auth/refresh, and it only accepts
+  // { refreshToken }, not { accessToken, refreshToken }.
   refreshToken(data: RefreshTokenRequest) {
-    return this.post<RefreshTokenResponse>(
-      "/auth/refresh-token",
-      data
-    );
+    return this.post<RefreshTokenResponse>("/auth/refresh", {
+      refreshToken: data.refreshToken,
+    });
   }
 
+  // TODO: these routes are not present in the backend swagger yet
+  // (/api/Auth has only register, login, refresh). Calling these will
+  // 404 until the backend implements them - remove this comment once
+  // they exist, or wire them to their real endpoints if they already
+  // exist under a different path.
   logout() {
     return this.post<void>("/auth/logout");
   }

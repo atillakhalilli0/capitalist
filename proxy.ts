@@ -4,7 +4,7 @@ const PUBLIC_ADMIN_ROUTES = [
   "/admin/login",
 ];
 
-export function middleware(
+export function proxy(
   request: NextRequest
 ) {
   const { pathname } = request.nextUrl;

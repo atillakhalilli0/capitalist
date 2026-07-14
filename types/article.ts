@@ -95,25 +95,28 @@ export interface CreateArticleRequest {
 export interface UpdateArticleRequest
   extends Partial<CreateArticleRequest> {}
 
+// NOTE: field names must match the backend's actual query parameters
+// (see GET /api/Articles in the swagger doc) or ASP.NET will silently
+// ignore them and fall back to defaults.
 export interface ArticleFilter {
-  page?: number;
+  pageNumber?: number;
   pageSize?: number;
 
-  search?: string;
+  searchQuery?: string;
 
   categoryId?: string;
 
-  authorId?: string;
-
-  tagId?: string;
+  tagSlug?: string;
 
   status?: ArticleStatus;
 
-  featured?: boolean;
+  isSponsored?: boolean;
 
-  breaking?: boolean;
+  startDate?: string;
+
+  endDate?: string;
 
   sortBy?: string;
 
-  sortDirection?: "asc" | "desc";
+  sortOrder?: "asc" | "desc";
 }

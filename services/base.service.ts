@@ -4,6 +4,8 @@ import axios, {
   AxiosRequestConfig,
 } from "axios";
 
+import { useAuthStore } from "@/store/authStore";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
   "http://localhost:5239/api";
@@ -19,13 +21,15 @@ class BaseService {
       },
     });
 
+    // authStore (zustand `persist`) is the single source of truth for the
+    // token, saved under the "auth-storage" localStorage key as a JSON
+    // blob. Reading a plain "accessToken" key here (as before) never
+    // matched anything, so every request after login was unauthenticated.
     this.api.interceptors.request.use((config) => {
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("accessToken");
+      const token = useAuthStore.getState().accessToken;
 
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
 
       return config;
@@ -35,10 +39,7 @@ class BaseService {
       (response) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
-          if (typeof window !== "undefined") {
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-          }
+          useAuthStore.getState().logout();
         }
 
         return Promise.reject(error);

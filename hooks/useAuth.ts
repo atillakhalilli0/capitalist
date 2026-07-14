@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 
 import { authService } from "@/services/auth.service";
+import { userService } from "@/services/user.service";
 
 import type {
   ChangePasswordRequest,
@@ -18,10 +19,12 @@ import type {
 
 const QUERY_KEY = "auth";
 
+// NOTE: the backend has no /api/Auth/me route (see swagger). The
+// equivalent "who am I" data comes from GET /api/Users/profile instead.
 export function useProfile() {
   return useQuery({
     queryKey: [QUERY_KEY, "me"],
-    queryFn: () => authService.me(),
+    queryFn: () => userService.getProfile(),
   });
 }
 

@@ -3,10 +3,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { User } from "@/types/user";
+import type { UserProfile } from "@/types/auth";
 
 interface AuthState {
-  user: User | null;
+  user: UserProfile | null;
 
   accessToken: string | null;
 
@@ -15,14 +15,14 @@ interface AuthState {
   isAuthenticated: boolean;
 
   login: (payload: {
-    user: User;
+    user: UserProfile;
     accessToken: string;
     refreshToken: string;
   }) => void;
 
   logout: () => void;
 
-  setUser: (user: User) => void;
+  setUser: (user: UserProfile) => void;
 
   setAccessToken: (token: string) => void;
 

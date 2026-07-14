@@ -1,11 +1,11 @@
 import BaseService from "./base.service";
 
-import type { Article, CreateArticleRequest, UpdateArticleRequest } from "@/types/article";
+import type { Article, ArticleFilter, CreateArticleRequest, UpdateArticleRequest } from "@/types/article";
 
-import type { PaginatedResponse, PaginationParams } from "@/types/api";
+import type { PaginatedResponse } from "@/types/api";
 
 class ArticleService extends BaseService {
-   getAll(params?: PaginationParams) {
+   getAll(params?: ArticleFilter) {
       return this.get<PaginatedResponse<Article>>("/articles", {
          params,
       });
@@ -15,6 +15,13 @@ class ArticleService extends BaseService {
       return this.get<Article>(`/articles/${id}`);
    }
 
+   // TODO: none of the methods below (getBySlug, getLatest, getFeatured,
+   // getPopular, getByCategory, getByAuthor, search) have a matching route
+   // in the backend swagger - only GET /api/Articles, GET/PUT/DELETE
+   // /api/Articles/{id}, POST /api/Articles, publish, rollback, and
+   // versions exist there. These will 404 until the backend adds them,
+   // or you can get the same results by calling getAll() with the right
+   // ArticleFilter (e.g. { searchQuery, categoryId, status }).
    getBySlug(slug: string) {
       return this.get<Article>(`/articles/slug/${slug}`);
    }
@@ -43,19 +50,19 @@ class ArticleService extends BaseService {
       });
    }
 
-   getByCategory(slug: string, params?: PaginationParams) {
+   getByCategory(slug: string, params?: ArticleFilter) {
       return this.get<PaginatedResponse<Article>>(`/articles/category/${slug}`, {
          params,
       });
    }
 
-   getByAuthor(authorId: string, params?: PaginationParams) {
+   getByAuthor(authorId: string, params?: ArticleFilter) {
       return this.get<PaginatedResponse<Article>>(`/articles/author/${authorId}`, {
          params,
       });
    }
 
-   search(query: string, params?: PaginationParams) {
+   search(query: string, params?: ArticleFilter) {
       return this.get<PaginatedResponse<Article>>("/articles/search", {
          params: {
             ...params,

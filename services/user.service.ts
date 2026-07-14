@@ -1,6 +1,7 @@
 import BaseService from "./base.service";
 
 import type { User } from "@/types/user";
+import type { UserProfile } from "@/types/auth";
 import type {
   PaginatedResponse,
   PaginationParams,
@@ -32,7 +33,7 @@ class UserService extends BaseService {
   }
 
   getProfile() {
-    return this.get<User>("/users/profile");
+    return this.get<UserProfile>("/users/profile");
   }
 
   create(data: CreateUserRequest) {

@@ -13,8 +13,53 @@ import type {
   CreateArticleRequest,
   UpdateArticleRequest,
 } from "@/types/article";
+import { ArticleStatus } from "@/types/article";
 
 const QUERY_KEY = "articles";
+
+// The backend has no dedicated dashboard/stats endpoint, so this derives
+// the numbers from GET /api/Articles instead. pageSize: 1 is enough to
+// read `totalCount` for each status without pulling the full list.
+// totalViews is a best-effort sum over the published page we already have;
+// swap this for a real aggregate endpoint if/when the backend adds one.
+export function useDashboardStats() {
+  return useQuery({
+    queryKey: [QUERY_KEY, "dashboard-stats"],
+    queryFn: async () => {
+      const [all, published, draft] = await Promise.all([
+        articleService.getAll({ pageNumber: 1, pageSize: 1 }),
+        articleService.getAll({
+          pageNumber: 1,
+          pageSize: 1,
+          status: ArticleStatus.PUBLISHED,
+        }),
+        articleService.getAll({
+          pageNumber: 1,
+          pageSize: 1,
+          status: ArticleStatus.DRAFT,
+        }),
+      ]);
+
+      const publishedArticles = await articleService.getAll({
+        pageNumber: 1,
+        pageSize: published.totalCount || 1,
+        status: ArticleStatus.PUBLISHED,
+      });
+
+      const totalViews = publishedArticles.items.reduce(
+        (sum, article) => sum + (article.viewCount ?? 0),
+        0
+      );
+
+      return {
+        totalArticles: all.totalCount,
+        publishedArticles: published.totalCount,
+        draftArticles: draft.totalCount,
+        totalViews,
+      };
+    },
+  });
+}
 
 export function useArticles(
   params?: ArticleFilter
