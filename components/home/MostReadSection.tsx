@@ -1,0 +1,120 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { popularArticles } from "@/mocks/articles/popular";
+import { TrendingUp, Clock, Eye } from "lucide-react";
+
+type Range = "today" | "week" | "month" | "all";
+
+const tabs: { key: Range; label: string }[] = [
+  { key: "today", label: "Bugün" },
+  { key: "week", label: "Həftə" },
+  { key: "month", label: "Ay" },
+  { key: "all", label: "Bütün vaxtlar" },
+];
+
+export default function MostReadSection() {
+  const [active, setActive] = useState<Range>("today");
+
+  const articles = useMemo(() => {
+    switch (active) {
+      case "today":
+        return popularArticles.slice(0, 5);
+
+      case "week":
+        return [...popularArticles]
+          .sort((a, b) => b.viewCount - a.viewCount)
+          .slice(0, 5);
+
+      case "month":
+        return [...popularArticles]
+          .sort((a, b) => b.viewCount - a.viewCount)
+          .slice(1, 6);
+
+      case "all":
+        return [...popularArticles]
+          .sort((a, b) => b.viewCount - a.viewCount);
+
+      default:
+        return popularArticles;
+    }
+  }, [active]);
+
+  return (
+    <section className="py-14 lg:py-20 border-t border-border bg-background transition-colors duration-300">
+      <div className="container mx-auto px-4">
+        {/* Header Block with Tab Filter */}
+        <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between border-b border-border pb-6">
+          <div>
+            <span className="font-mono text-xs font-black uppercase tracking-[0.25em] text-accent flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Bazar Trendləri
+            </span>
+            <h2 className="mt-2 text-3xl font-black text-foreground">
+              Ən çox oxunanlar
+            </h2>
+          </div>
+
+          {/* Custom Tabs */}
+          <div className="flex flex-wrap gap-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActive(tab.key)}
+                className={`rounded border px-4 py-2 font-sans text-xs font-extrabold uppercase tracking-wider transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+                  active === tab.key
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-border hover:bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Board List */}
+        <div className="grid gap-px border border-border bg-border rounded-lg overflow-hidden lg:grid-cols-2">
+          {articles.map((article, index) => (
+            <Link
+              key={article.id}
+              href={`/${article.category.slug}/${article.slug}`}
+              className="group flex items-start gap-6 bg-card p-6 hover:bg-secondary/40 transition-colors duration-200"
+            >
+              {/* Number Index */}
+              <span className="font-mono text-3xl font-black tracking-tighter text-border group-hover:text-accent transition-colors duration-200 shrink-0">
+                {(index + 1).toString().padStart(2, "0")}
+              </span>
+
+              {/* Story Description */}
+              <div className="min-w-0 flex-1 space-y-2">
+                <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-accent block">
+                  {article.category.name}
+                </span>
+
+                <h3 className="font-sans text-base font-bold leading-snug text-foreground group-hover:text-accent transition-colors duration-200 line-clamp-2">
+                  {article.title}
+                </h3>
+
+                <div className="flex flex-wrap items-center gap-4 pt-1 font-mono text-[10px] text-muted-foreground">
+                  <span className="font-semibold text-foreground">
+                    {article.author.name} {article.author.surname}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    {article.readingTime} DƏQ
+                  </span>
+                  <span className="flex items-center gap-1 ml-auto">
+                    <Eye className="h-3.5 w-3.5" />
+                    {article.viewCount.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

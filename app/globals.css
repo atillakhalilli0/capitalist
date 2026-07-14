@@ -1,0 +1,246 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-border: var(--border);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * .5);
+  --radius-md: calc(var(--radius) * .75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+
+  --container: 1440px;
+}
+
+:root {
+  /* Background: Off-white sand ("İpək") */
+  --background: #f7f8fa;
+  --foreground: #0b1b33;
+
+  /* Cards */
+  --card: #ffffff;
+  --card-foreground: #0b1b33;
+
+  /* Brand: Deep Navy ("Xəzər") */
+  --primary: #0b1b33;
+  --primary-foreground: #ffffff;
+
+  /* Surface */
+  --secondary: #f0f2f5;
+  --secondary-foreground: #0b1b33;
+
+  /* Muted: Slate Grey ("Kür") */
+  --muted: #f0f2f5;
+  --muted-foreground: #5a6982;
+
+  /* Accent: Oil Gold ("Bakı") */
+  --accent: #c5a866;
+  --accent-foreground: #0b1b33;
+
+  /* Border & Ring */
+  --border: #e2e8f0;
+  --ring: #c5a866;
+
+  --radius: 0.5rem; /* Clean editorial radius */
+}
+
+.dark {
+  /* Deep dark navy */
+  --background: #060c16;
+  --foreground: #f3f4f6;
+
+  /* Cards */
+  --card: #0a1322;
+  --card-foreground: #f3f4f6;
+
+  /* Brand: Gold accent brand in dark mode */
+  --primary: #c5a866;
+  --primary-foreground: #060c16;
+
+  /* Surface */
+  --secondary: #0f1e35;
+  --secondary-foreground: #f3f4f6;
+
+  /* Muted */
+  --muted: #0f1e35;
+  --muted-foreground: #94a8c6;
+
+  /* Accent */
+  --accent: #d4b982;
+  --accent-foreground: #060c16;
+
+  /* Border & Ring */
+  --border: #1e2a3c;
+  --ring: #d4b982;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+
+    min-height: 100vh;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: var(--primary);
+    color: white;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: inherit;
+    font-weight: 700;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Global container */
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .container {
+    padding-inline: 2.5rem;
+  }
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker {
+  animation: ticker 35s linear infinite;
+}
+
+.ticker:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker {
+    animation: none;
+  }
+}
