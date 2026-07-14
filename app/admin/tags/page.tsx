@@ -1,10 +1,53 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Plus, Search, Pencil, Eye, Tag } from "lucide-react";
+import { Plus, Search, Trash2, Tag, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
-import { tags } from "@/mocks/tags";
+import { useTags, useDeleteTag } from "@/hooks/useTags";
 
 export default function AdminTagsPage() {
+  const { data: tags, isLoading, isError, refetch } = useTags();
+  const { mutate: deleteTag } = useDeleteTag();
+  const [search, setSearch] = useState("");
+
+  const handleDelete = (id: string, name: string) => {
+    if (confirm(`"${name}" teqini silmək istədiyinizdən əminsiniz?`)) {
+      deleteTag(id, {
+        onSuccess: () => {
+          toast.success("Teq uğurla silindi");
+          refetch();
+        },
+        onError: (error: any) => {
+          const detail = error?.response?.data?.detail || "Xəta baş verdi";
+          toast.error(`Teq silinə bilmədi: ${detail}`);
+        },
+      });
+    }
+  };
+
+  const filteredTags = tags?.filter((item) =>
+    item.name.toLowerCase().includes(search.toLowerCase())
+  ) || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-96 items-center justify-center text-destructive">
+        Teqlər yüklənərkən xəta baş verdi.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -20,7 +63,7 @@ export default function AdminTagsPage() {
 
         <Link
           href="/admin/tags/create"
-          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
         >
           <Plus className="mr-2 h-4 w-4" />
           Yeni teq
@@ -33,6 +76,8 @@ export default function AdminTagsPage() {
         <Input
           className="pl-10"
           placeholder="Teq axtar..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
@@ -43,53 +88,52 @@ export default function AdminTagsPage() {
               <th className="px-6 py-4 text-left text-sm font-semibold">
                 Ad
               </th>
-
               <th className="px-6 py-4 text-left text-sm font-semibold">
                 Slug
               </th>
-
-              <th className="px-6 py-4 text-center text-sm font-semibold">
+              <th className="px-6 py-4 text-center text-sm font-semibold w-[100px]">
                 Əməliyyat
               </th>
             </tr>
           </thead>
 
           <tbody>
-            {tags.map((tag) => (
-              <tr
-                key={tag.id}
-                className="border-b last:border-none"
-              >
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <Tag className="h-4 w-4 text-emerald-600" />
-                    {tag.name}
-                  </div>
-                </td>
-
-                <td className="px-6 py-4 text-muted-foreground">
-                  {tag.slug}
-                </td>
-
-                <td className="px-6 py-4">
-                  <div className="flex justify-center gap-2">
-                    <Link
-                      href={`/admin/tags/${tag.id}`}
-                      className="rounded-lg border p-2 hover:bg-muted"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Link>
-
-                    <Link
-                      href={`/admin/tags/${tag.id}/edit`}
-                      className="rounded-lg border p-2 hover:bg-muted"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Link>
-                  </div>
+            {filteredTags.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground">
+                  Teq tapılmadı.
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredTags.map((tag) => (
+                <tr
+                  key={tag.id}
+                  className="border-b last:border-none"
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <Tag className="h-4 w-4 text-emerald-600" />
+                      {tag.name}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-muted-foreground">
+                    {tag.slug || tag.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex justify-center gap-2">
+                      <button
+                        onClick={() => handleDelete(tag.id, tag.name)}
+                        className="rounded-lg bg-destructive p-2 text-destructive-foreground transition hover:opacity-90"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

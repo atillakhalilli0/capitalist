@@ -6,22 +6,15 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import {
-  tagService,
-  type CreateTagRequest,
-  type UpdateTagRequest,
-} from "@/services/tag.service";
+import { tagService } from "@/services/tag.service";
+import type { Tag } from "@/types/article";
 
 const QUERY_KEY = "tags";
 
-export function useTags(params?: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-}) {
+export function useTags() {
   return useQuery({
-    queryKey: [QUERY_KEY, params],
-    queryFn: () => tagService.getAll(params),
+    queryKey: [QUERY_KEY],
+    queryFn: () => tagService.getAll(),
   });
 }
 
@@ -52,8 +45,7 @@ export function useCreateTag() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateTagRequest) =>
-      tagService.create(data),
+    mutationFn: (data: { name: string }) => tagService.create(data),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -72,7 +64,7 @@ export function useUpdateTag() {
       data,
     }: {
       id: string;
-      data: UpdateTagRequest;
+      data: { name: string };
     }) => tagService.update(id, data),
 
     onSuccess: (_, variables) => {
@@ -91,8 +83,7 @@ export function useDeleteTag() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) =>
-      tagService.remove(id),
+    mutationFn: (id: string) => tagService.remove(id),
 
     onSuccess: () => {
       queryClient.invalidateQueries({

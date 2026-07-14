@@ -1,4 +1,6 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   Eye,
@@ -6,12 +8,37 @@ import {
   Pencil,
   Plus,
   Search,
+  Loader2,
+  Mic2,
 } from "lucide-react";
 
-import { podcasts } from "@/mocks/podcasts";
 import { Input } from "@/components/ui/input";
+import { usePodcasts } from "@/hooks/usePodcasts";
 
 export default function AdminPodcastsPage() {
+  const { data: podcasts, isLoading, isError } = usePodcasts();
+  const [search, setSearch] = useState("");
+
+  const filteredPodcasts = podcasts?.filter((item) =>
+    item.title.toLowerCase().includes(search.toLowerCase())
+  ) || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-96 items-center justify-center text-destructive">
+        Podcastlar yüklənərkən xəta baş verdi.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -27,7 +54,7 @@ export default function AdminPodcastsPage() {
 
         <Link
           href="/admin/podcasts/create"
-          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
         >
           <Plus className="mr-2 h-4 w-4" />
           Yeni podcast
@@ -40,6 +67,8 @@ export default function AdminPodcastsPage() {
         <Input
           placeholder="Podcast axtar..."
           className="pl-10"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
@@ -52,94 +81,56 @@ export default function AdminPodcastsPage() {
               </th>
 
               <th className="px-6 py-4 text-left text-sm font-semibold">
-                Qonaq
+                Aparıcı
               </th>
 
               <th className="px-6 py-4 text-left text-sm font-semibold">
-                Müddət
-              </th>
-
-              <th className="px-6 py-4 text-center text-sm font-semibold">
-                Featured
-              </th>
-
-              <th className="px-6 py-4 text-center text-sm font-semibold">
-                Əməliyyat
+                RSS Feed URL
               </th>
             </tr>
           </thead>
 
           <tbody>
-            {podcasts.map((podcast) => (
-              <tr
-                key={podcast.id}
-                className="border-b last:border-none"
-              >
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-4">
-                    <div className="relative h-16 w-24 overflow-hidden rounded-lg bg-muted">
-                      <Image
-                        src={podcast.coverImage}
-                        alt={podcast.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="font-semibold">
-                        {podcast.title}
-                      </div>
-
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {podcast.slug}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                <td className="px-6 py-4">
-                  {podcast.guest}
-                </td>
-
-                <td className="px-6 py-4">
-                  <div className="inline-flex items-center gap-2">
-                    <Headphones className="h-4 w-4 text-muted-foreground" />
-                    {podcast.duration}
-                  </div>
-                </td>
-
-                <td className="px-6 py-4 text-center">
-                  {podcast.featured ? (
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                      Bəli
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-muted px-3 py-1 text-xs">
-                      Xeyr
-                    </span>
-                  )}
-                </td>
-
-                <td className="px-6 py-4">
-                  <div className="flex justify-center gap-2">
-                    <Link
-                      href={`/admin/podcasts/${podcast.id}`}
-                      className="rounded-lg border border-border p-2 hover:bg-muted"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Link>
-
-                    <Link
-                      href={`/admin/podcasts/${podcast.id}/edit`}
-                      className="rounded-lg border border-border p-2 hover:bg-muted"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Link>
-                  </div>
+            {filteredPodcasts.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground">
+                  Podcast tapılmadı.
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredPodcasts.map((podcast) => (
+                <tr
+                  key={podcast.id}
+                  className="border-b last:border-none"
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-16 w-24 items-center justify-center rounded-lg bg-muted border text-muted-foreground">
+                        <Mic2 className="h-6 w-6" />
+                      </div>
+
+                      <div>
+                        <div className="font-semibold">
+                          {podcast.title}
+                        </div>
+
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {podcast.slug || podcast.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    {podcast.hostName || "-"}
+                  </td>
+
+                  <td className="px-6 py-4 text-muted-foreground text-sm truncate max-w-xs">
+                    {podcast.rssFeedUrl || "-"}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

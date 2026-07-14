@@ -1,5 +1,7 @@
+"use client";
+
+import { use } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -8,9 +10,12 @@ import {
   Calendar,
   Clock3,
   BarChart3,
+  Loader2,
 } from "lucide-react";
 
-import { articles as allArticles } from "@/mocks/articles";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useArticle } from "@/hooks/useArticles";
 
 type ArticlePreviewPageProps = {
   params: Promise<{
@@ -18,15 +23,29 @@ type ArticlePreviewPageProps = {
   }>;
 };
 
-export default async function ArticlePreviewPage({
+export default function ArticlePreviewPage({
   params,
 }: ArticlePreviewPageProps) {
-  const { id } = await params;
+  const { id } = use(params);
+  const { data: article, isLoading, isError } = useArticle(id);
 
-  const article = allArticles.find((item) => item.id === id);
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
-  if (!article) {
-    notFound();
+  if (isError || !article) {
+    return (
+      <div className="flex h-96 flex-col items-center justify-center gap-4 text-center">
+        <p className="text-destructive font-medium">Məqalə tapılmadı və ya yüklənə bilmədi.</p>
+        <Link href="/admin/articles" className="text-sm underline">
+          Məqalələrə qayıt
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -48,7 +67,7 @@ export default async function ArticlePreviewPage({
 
         <div className="flex gap-3">
           <Link
-            href={`/${article.category.slug}/${article.slug}`}
+            href={`/${article.category?.slug || "general"}/${article.slug}`}
             target="_blank"
             className="inline-flex items-center rounded-xl border border-border px-5 py-3 text-sm font-medium hover:bg-muted"
           >
@@ -81,7 +100,7 @@ export default async function ArticlePreviewPage({
 
           <div className="rounded-3xl border border-border bg-card p-8">
             <span className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-600">
-              {article.category.name}
+              {article.category?.name || "Kateqoriyasız"}
             </span>
 
             <h2 className="mt-4 text-4xl font-bold leading-tight">
@@ -102,12 +121,13 @@ export default async function ArticlePreviewPage({
 
             <div className="mt-10 rounded-2xl bg-muted/50 p-6">
               <h3 className="mb-4 font-semibold">
-                Content Preview
+                Məqalə məzmunu
               </h3>
 
-              <pre className="overflow-x-auto whitespace-pre-wrap text-sm">
-                {JSON.stringify(article.content, null, 2)}
-              </pre>
+              <div 
+                className="prose dark:prose-invert max-w-none text-sm leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: typeof article.content === 'string' ? article.content : JSON.stringify(article.content) }}
+              />
             </div>
           </div>
         </div>
@@ -135,20 +155,22 @@ export default async function ArticlePreviewPage({
                 </span>
 
                 <span className="font-semibold">
-                  {article.author.name} {article.author.surname}
+                  {article.author?.fullName || "Bilinmir"}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">
-                  Oxuma müddəti
-                </span>
+              {article.readingTime && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">
+                    Oxuma müddəti
+                  </span>
 
-                <span className="flex items-center gap-1">
-                  <Clock3 className="h-4 w-4" />
-                  {article.readingTime} dəq
-                </span>
-              </div>
+                  <span className="flex items-center gap-1">
+                    <Clock3 className="h-4 w-4" />
+                    {article.readingTime} dəq
+                  </span>
+                </div>
+              )}
 
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">
@@ -157,7 +179,7 @@ export default async function ArticlePreviewPage({
 
                 <span className="flex items-center gap-1">
                   <BarChart3 className="h-4 w-4" />
-                  {article.viewCount.toLocaleString()}
+                  {(article.viewCount || 0).toLocaleString()}
                 </span>
               </div>
 
@@ -178,50 +200,58 @@ export default async function ArticlePreviewPage({
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border bg-card p-6">
-            <h3 className="mb-4 text-lg font-semibold">
-              SEO
-            </h3>
+          {article.seo && (
+            <div className="rounded-3xl border border-border bg-card p-6">
+              <h3 className="mb-4 text-lg font-semibold">
+                SEO
+              </h3>
 
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  SEO Title
-                </p>
+              <div className="space-y-4">
+                {article.seo.title && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      SEO Title
+                    </p>
 
-                <p className="mt-1 font-medium">
-                  {article.seo.title}
-                </p>
-              </div>
+                    <p className="mt-1 font-medium">
+                      {article.seo.title}
+                    </p>
+                  </div>
+                )}
 
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  SEO Description
-                </p>
+                {article.seo.description && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      SEO Description
+                    </p>
 
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {article.seo.description}
-                </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {article.seo.description}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="rounded-3xl border border-border bg-card p-6">
-            <h3 className="mb-4 text-lg font-semibold">
-              Teqlər
-            </h3>
+          {article.tags && article.tags.length > 0 && (
+            <div className="rounded-3xl border border-border bg-card p-6">
+              <h3 className="mb-4 text-lg font-semibold">
+                Teqlər
+              </h3>
 
-            <div className="flex flex-wrap gap-2">
-              {article.tags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="rounded-full bg-muted px-3 py-1 text-xs font-medium"
-                >
-                  {tag.name}
-                </span>
-              ))}
+              <div className="flex flex-wrap gap-2">
+                {article.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="rounded-full bg-muted px-3 py-1 text-xs font-medium"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </aside>
       </div>
     </div>

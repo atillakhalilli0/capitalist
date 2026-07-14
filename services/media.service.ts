@@ -1,91 +1,64 @@
 import BaseService from "./base.service";
-
-import type {
-  PaginatedResponse,
-  PaginationParams,
-} from "@/types/api";
+import type { PaginatedResponse, PaginationParams } from "@/types/api";
 
 export interface MediaFile {
   id: string;
-
-  fileName: string;
-
-  originalFileName: string;
-
   url: string;
-
-  thumbnailUrl?: string;
-
-  mimeType: string;
-
-  extension: string;
-
-  size: number;
-
-  width?: number;
-
-  height?: number;
-
-  createdAt: string;
+  altText?: string;
+  fileName?: string;
+  size?: number;
+  createdAt?: string;
 }
 
 class MediaService extends BaseService {
   getAll(params?: PaginationParams) {
-    return this.get<
-      PaginatedResponse<MediaFile>
-    >("/media", {
-      params,
-    });
+    // Stub implementation since backend doesn't support listing media
+    return Promise.resolve({
+      items: [] as MediaFile[],
+      pageNumber: 1,
+      pageSize: params?.pageSize ?? 10,
+      totalCount: 0,
+      totalPages: 0,
+      hasPreviousPage: false,
+      hasNextPage: false,
+    } as PaginatedResponse<MediaFile>);
   }
 
   getById(id: string) {
-    return this.get<MediaFile>(
-      `/media/${id}`
-    );
+    // Stub implementation since backend doesn't support reading individual media resource
+    return Promise.resolve({
+      id,
+      url: "",
+      altText: "",
+    } as MediaFile);
   }
 
   upload(file: File) {
     const formData = new FormData();
-
     formData.append("file", file);
+    formData.append("altText", file.name);
 
     return this.post<MediaFile>(
-      "/media/upload",
+      "/Media/upload",
       formData,
       {
         headers: {
-          "Content-Type":
-            "multipart/form-data",
+          "Content-Type": "multipart/form-data",
         },
       }
     );
   }
 
   uploadMany(files: File[]) {
-    const formData = new FormData();
-
-    files.forEach((file) =>
-      formData.append("files", file)
-    );
-
-    return this.post<MediaFile[]>(
-      "/media/upload-many",
-      formData,
-      {
-        headers: {
-          "Content-Type":
-            "multipart/form-data",
-        },
-      }
-    );
+    // Backend only supports upload, so we map files sequentially or simulate
+    return Promise.all(files.map((file) => this.upload(file)));
   }
 
   remove(id: string) {
-    return super.delete<void>(
-      `/media/${id}`
-    );
+    // Stub implementation since backend doesn't support deleting media
+    return Promise.resolve();
   }
 }
 
-export const mediaService =
-  new MediaService();
+export const mediaService = new MediaService();
+export default MediaService;

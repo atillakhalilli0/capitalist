@@ -1,8 +1,9 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil, Tag } from "lucide-react";
+"use client";
 
-import { tags } from "@/mocks/tags";
+import { use } from "react";
+import Link from "next/link";
+import { ArrowLeft, Pencil, Tag, Loader2 } from "lucide-react";
+import { useTag } from "@/hooks/useTags";
 
 type TagPreviewPageProps = {
   params: Promise<{
@@ -10,15 +11,29 @@ type TagPreviewPageProps = {
   }>;
 };
 
-export default async function TagPreviewPage({
+export default function TagPreviewPage({
   params,
 }: TagPreviewPageProps) {
-  const { id } = await params;
+  const { id } = use(params);
+  const { data: tag, isLoading, isError } = useTag(id);
 
-  const tag = tags.find((item) => item.id === id);
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
-  if (!tag) {
-    notFound();
+  if (isError || !tag) {
+    return (
+      <div className="flex h-96 flex-col items-center justify-center gap-4 text-center">
+        <p className="text-destructive font-medium">Teq tapılmadı</p>
+        <Link href="/admin/tags" className="text-sm underline">
+          Teqlərə qayıt
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -59,7 +74,7 @@ export default async function TagPreviewPage({
             </h2>
 
             <p className="text-muted-foreground">
-              #{tag.slug}
+              #{tag.slug || tag.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
             </p>
           </div>
         </div>
@@ -80,20 +95,8 @@ export default async function TagPreviewPage({
               Slug
             </h3>
 
-            <p>{tag.slug}</p>
+            <p>{tag.slug || tag.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}</p>
           </div>
-
-          {tag.description && (
-            <div>
-              <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-                Açıqlama
-              </h3>
-
-              <p className="leading-7 text-muted-foreground">
-                {tag.description}
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>

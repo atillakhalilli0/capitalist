@@ -1,12 +1,50 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useCategories, useCreateCategory } from "@/hooks/useCategories";
 
 export default function CreateCategoryPage() {
+  const router = useRouter();
+  const { data: categories, isLoading: isCategoriesLoading } = useCategories();
+  const { mutate: createCategory, isPending } = useCreateCategory();
+
+  const [name, setName] = useState("");
+  const [parentCategoryId, setParentCategoryId] = useState<string | null>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim()) {
+      toast.error("Kateqoriya adı daxil edilməlidir");
+      return;
+    }
+
+    createCategory(
+      {
+        name,
+        parentCategoryId: parentCategoryId || null,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Kateqoriya uğurla yaradıldı");
+          router.push("/admin/categories");
+        },
+        onError: (error: any) => {
+          const detail = error?.response?.data?.detail || "Xəta baş verdi";
+          toast.error(`Kateqoriya yaradıla bilmədi: ${detail}`);
+        },
+      }
+    );
+  };
+
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <Link
@@ -26,13 +64,18 @@ export default function CreateCategoryPage() {
           </p>
         </div>
 
-        <Link
-          href="#"
-          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+        <button
+          type="submit"
+          disabled={isPending}
+          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
-          <Save className="mr-2 h-4 w-4" />
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           Saxla
-        </Link>
+        </button>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-8">
@@ -42,44 +85,11 @@ export default function CreateCategoryPage() {
               Kateqoriya adı
             </label>
 
-            <Input placeholder="Məs: Biznes" />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Slug
-            </label>
-
-            <Input placeholder="biznes" />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Təsvir
-            </label>
-
-            <Textarea
-              rows={4}
-              placeholder="Kateqoriya haqqında qısa məlumat..."
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Şəkil URL
-            </label>
-
-            <Input placeholder="https://..." />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Sıralama
-            </label>
-
             <Input
-              type="number"
-              defaultValue={1}
+              placeholder="Məs: Biznes"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
             />
           </div>
 
@@ -88,32 +98,22 @@ export default function CreateCategoryPage() {
               Parent Kateqoriya
             </label>
 
-            <select className="w-full rounded-xl border border-input bg-background px-4 py-3">
-              <option>Yoxdur</option>
-              <option>Biznes</option>
-              <option>Maliyyə</option>
-              <option>Startap</option>
-              <option>Texnologiya</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <input
-              id="active"
-              type="checkbox"
-              defaultChecked
-              className="h-4 w-4"
-            />
-
-            <label
-              htmlFor="active"
-              className="text-sm font-medium"
+            <select
+              value={parentCategoryId || ""}
+              onChange={(e) => setParentCategoryId(e.target.value || null)}
+              disabled={isCategoriesLoading}
+              className="w-full rounded-xl border border-input bg-background px-4 py-3"
             >
-              Aktiv kateqoriya
-            </label>
+              <option value="">Yoxdur</option>
+              {categories?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 }

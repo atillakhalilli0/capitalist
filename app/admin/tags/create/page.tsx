@@ -1,12 +1,44 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useCreateTag } from "@/hooks/useTags";
 
 export default function CreateTagPage() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const { mutate: createTag, isPending } = useCreateTag();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim()) {
+      toast.error("Teq adı daxil edilməlidir");
+      return;
+    }
+
+    createTag(
+      { name },
+      {
+        onSuccess: () => {
+          toast.success("Teq uğurla yaradıldı");
+          router.push("/admin/tags");
+        },
+        onError: (error: any) => {
+          const detail = error?.response?.data?.detail || "Xəta baş verdi";
+          toast.error(`Teq yaradıla bilmədi: ${detail}`);
+        },
+      }
+    );
+  };
+
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <Link
@@ -26,13 +58,18 @@ export default function CreateTagPage() {
           </p>
         </div>
 
-        <Link
-          href="#"
-          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+        <button
+          type="submit"
+          disabled={isPending}
+          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
-          <Save className="mr-2 h-4 w-4" />
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           Saxla
-        </Link>
+        </button>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-8 space-y-6">
@@ -41,28 +78,14 @@ export default function CreateTagPage() {
             Teq adı
           </label>
 
-          <Input placeholder="Startup" />
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            Slug
-          </label>
-
-          <Input placeholder="startup" />
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            Açıqlama
-          </label>
-
-          <Textarea
-            rows={5}
-            placeholder="Teq haqqında qısa məlumat..."
+          <Input
+            placeholder="Məsələn: Biznes"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
           />
         </div>
       </div>
-    </div>
+    </form>
   );
 }

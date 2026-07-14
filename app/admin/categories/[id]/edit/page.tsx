@@ -1,11 +1,13 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, Save } from "lucide-react";
+"use client";
 
-import { categories } from "@/mocks/categories";
+import { use, useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useCategories, useCategory, useUpdateCategory } from "@/hooks/useCategories";
 
 type EditCategoryPageProps = {
   params: Promise<{
@@ -13,19 +15,74 @@ type EditCategoryPageProps = {
   }>;
 };
 
-export default async function EditCategoryPage({
-  params,
-}: EditCategoryPageProps) {
-  const { id } = await params;
+export default function EditCategoryPage({ params }: EditCategoryPageProps) {
+  const { id } = use(params);
+  const router = useRouter();
 
-  const category = categories.find((item) => item.id === id);
+  const { data: category, isLoading: isCategoryLoading } = useCategory(id);
+  const { data: categories, isLoading: isCategoriesLoading } = useCategories();
+  const { mutate: updateCategory, isPending } = useUpdateCategory();
+
+  const [name, setName] = useState("");
+  const [parentCategoryId, setParentCategoryId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (category) {
+      setName(category.name);
+      setParentCategoryId(category.parentCategoryId || null);
+    }
+  }, [category]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim()) {
+      toast.error("Kateqoriya adı daxil edilməlidir");
+      return;
+    }
+
+    updateCategory(
+      {
+        id,
+        data: {
+          name,
+          parentCategoryId: parentCategoryId || null,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Kateqoriya uğurla yeniləndi");
+          router.push("/admin/categories");
+        },
+        onError: (error: any) => {
+          const detail = error?.response?.data?.detail || "Xəta baş verdi";
+          toast.error(`Kateqoriya yenilənə bilmədi: ${detail}`);
+        },
+      }
+    );
+  };
+
+  if (isCategoryLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!category) {
-    notFound();
+    return (
+      <div className="flex h-96 flex-col items-center justify-center gap-4 text-center">
+        <p className="text-destructive font-medium">Kateqoriya tapılmadı</p>
+        <Link href="/admin/categories" className="text-sm underline">
+          Kateqoriyalara qayıt
+        </Link>
+      </div>
+    );
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <Link
@@ -45,13 +102,18 @@ export default async function EditCategoryPage({
           </p>
         </div>
 
-        <Link
-          href="#"
-          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+        <button
+          type="submit"
+          disabled={isPending}
+          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
-          <Save className="mr-2 h-4 w-4" />
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           Dəyişiklikləri saxla
-        </Link>
+        </button>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-8">
@@ -61,44 +123,11 @@ export default async function EditCategoryPage({
               Kateqoriya adı
             </label>
 
-            <Input defaultValue={category.name} />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Slug
-            </label>
-
-            <Input defaultValue={category.slug} />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Təsvir
-            </label>
-
-            <Textarea
-              rows={4}
-              defaultValue={category.description}
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Şəkil URL
-            </label>
-
-            <Input defaultValue={category.image} />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Sıralama
-            </label>
-
             <Input
-              type="number"
-              defaultValue={category.order}
+              placeholder="Kateqoriya adı..."
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
             />
           </div>
 
@@ -108,41 +137,23 @@ export default async function EditCategoryPage({
             </label>
 
             <select
-              defaultValue={category.parentId ?? ""}
+              value={parentCategoryId || ""}
+              onChange={(e) => setParentCategoryId(e.target.value || null)}
+              disabled={isCategoriesLoading}
               className="w-full rounded-xl border border-input bg-background px-4 py-3"
             >
               <option value="">Yoxdur</option>
-
               {categories
-                .filter((item) => item.id !== category.id)
+                ?.filter((item) => item.id !== id)
                 .map((item) => (
-                  <option
-                    key={item.id}
-                    value={item.id}
-                  >
+                  <option key={item.id} value={item.id}>
                     {item.name}
                   </option>
                 ))}
             </select>
           </div>
-
-          <div className="flex items-center gap-3">
-            <input
-              id="active"
-              type="checkbox"
-              defaultChecked={category.isActive}
-              className="h-4 w-4"
-            />
-
-            <label
-              htmlFor="active"
-              className="text-sm font-medium"
-            >
-              Aktiv kateqoriya
-            </label>
-          </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 }

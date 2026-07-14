@@ -11,38 +11,25 @@ import type { Category } from "@/types/category";
 
 const QUERY_KEY = "categories";
 
-export function useCategories(params?: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-}) {
+export function useCategories() {
   return useQuery({
-    queryKey: [QUERY_KEY, params],
-    queryFn: () =>
-      categoryService.getAll(params),
+    queryKey: [QUERY_KEY],
+    queryFn: () => categoryService.getAll(),
   });
 }
 
 export function useCategory(id?: string) {
   return useQuery({
     queryKey: [QUERY_KEY, id],
-    queryFn: () =>
-      categoryService.getById(id!),
+    queryFn: () => categoryService.getById(id!),
     enabled: !!id,
   });
 }
 
-export function useCategoryBySlug(
-  slug?: string
-) {
+export function useCategoryBySlug(slug?: string) {
   return useQuery({
-    queryKey: [
-      QUERY_KEY,
-      "slug",
-      slug,
-    ],
-    queryFn: () =>
-      categoryService.getBySlug(slug!),
+    queryKey: [QUERY_KEY, "slug", slug],
+    queryFn: () => categoryService.getBySlug(slug!),
     enabled: !!slug,
   });
 }
@@ -50,8 +37,7 @@ export function useCategoryBySlug(
 export function useCategoryList() {
   return useQuery({
     queryKey: [QUERY_KEY, "list"],
-    queryFn: () =>
-      categoryService.getList(),
+    queryFn: () => categoryService.getList(),
   });
 }
 
@@ -59,12 +45,8 @@ export function useCreateCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (
-      data: Omit<
-        Category,
-        "id" | "createdAt" | "updatedAt"
-      >
-    ) => categoryService.create(data),
+    mutationFn: (data: { name: string; parentCategoryId?: string | null }) =>
+      categoryService.create(data),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -83,12 +65,8 @@ export function useUpdateCategory() {
       data,
     }: {
       id: string;
-      data: Partial<Category>;
-    }) =>
-      categoryService.update(
-        id,
-        data
-      ),
+      data: { name: string; parentCategoryId?: string | null };
+    }) => categoryService.update(id, data),
 
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -96,10 +74,7 @@ export function useUpdateCategory() {
       });
 
       queryClient.invalidateQueries({
-        queryKey: [
-          QUERY_KEY,
-          variables.id,
-        ],
+        queryKey: [QUERY_KEY, variables.id],
       });
     },
   });
@@ -109,8 +84,7 @@ export function useDeleteCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) =>
-      categoryService.remove(id),
+    mutationFn: (id: string) => categoryService.remove(id),
 
     onSuccess: () => {
       queryClient.invalidateQueries({

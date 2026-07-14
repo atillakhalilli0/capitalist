@@ -1,51 +1,11 @@
-import axios, {
-  AxiosError,
-  AxiosInstance,
-  AxiosRequestConfig,
-} from "axios";
-
-import { useAuthStore } from "@/store/authStore";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:5239/api/v1";
+import { AxiosRequestConfig } from "axios";
+import api from "@/lib/axios";
 
 class BaseService {
-  protected api: AxiosInstance;
+  protected api = api;
 
-  constructor() {
-    this.api = axios.create({
-      baseURL: API_URL,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    // authStore (zustand `persist`) is the single source of truth for the
-    // token, saved under the "auth-storage" localStorage key as a JSON
-    // blob. Reading a plain "accessToken" key here (as before) never
-    // matched anything, so every request after login was unauthenticated.
-    this.api.interceptors.request.use((config) => {
-      const token = useAuthStore.getState().accessToken;
-
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-
-      return config;
-    });
-
-    this.api.interceptors.response.use(
-      (response) => response,
-      (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          useAuthStore.getState().logout();
-        }
-
-        return Promise.reject(error);
-      }
-    );
-  }
+  // Constructor is no longer needed since we reuse the shared client instance
+  constructor() {}
 
   protected async get<T>(
     url: string,

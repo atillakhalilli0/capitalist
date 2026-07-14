@@ -1,7 +1,9 @@
-import Link from "next/link";
-import { Eye, FolderTree, Pencil, Plus, Search } from "lucide-react";
+"use client";
 
-import { categories } from "@/mocks/categories";
+import { useState } from "react";
+import Link from "next/link";
+import { Eye, FolderTree, Pencil, Plus, Search, Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -12,8 +14,47 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
 
 export default function AdminCategoriesPage() {
+  const { data: categories, isLoading, isError } = useCategories();
+  const { mutate: deleteCategory } = useDeleteCategory();
+  const [search, setSearch] = useState("");
+
+  const handleDelete = (id: string, name: string) => {
+    if (confirm(`"${name}" kateqoriyasını silmək istədiyinizdən əminsiniz?`)) {
+      deleteCategory(id, {
+        onSuccess: () => {
+          toast.success("Kateqoriya uğurla silindi");
+        },
+        onError: (error: any) => {
+          const detail = error?.response?.data?.detail || "Xəta baş verdi";
+          toast.error(`Kateqoriya silinə bilmədi: ${detail}`);
+        },
+      });
+    }
+  };
+
+  const filteredCategories = categories?.filter((item) =>
+    item.name.toLowerCase().includes(search.toLowerCase())
+  ) || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-96 items-center justify-center text-destructive">
+        Kateqoriyalar yüklənərkən xəta baş verdi.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -29,7 +70,7 @@ export default function AdminCategoriesPage() {
 
         <Link
           href="/admin/categories/create"
-          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground"
+          className="inline-flex items-center rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:opacity-90"
         >
           <Plus className="mr-2 h-4 w-4" />
           Yeni kateqoriya
@@ -43,6 +84,8 @@ export default function AdminCategoriesPage() {
           <Input
             placeholder="Kateqoriya axtar..."
             className="pl-10"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
@@ -51,74 +94,62 @@ export default function AdminCategoriesPage() {
             <TableRow>
               <TableHead>Kateqoriya</TableHead>
               <TableHead>Slug</TableHead>
-              <TableHead>Sıra</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[140px]">
+              <TableHead>Parent Kateqoriya</TableHead>
+              <TableHead className="w-[140px] text-center">
                 Əməliyyat
               </TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-            {categories.map((category) => (
-              <TableRow key={category.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <FolderTree className="h-4 w-4 text-emerald-600" />
-
-                    <div>
-                      <p className="font-semibold">
-                        {category.name}
-                      </p>
-
-                      {category.description && (
-                        <p className="line-clamp-1 text-xs text-muted-foreground">
-                          {category.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  {category.slug}
-                </TableCell>
-
-                <TableCell>
-                  {category.order}
-                </TableCell>
-
-                <TableCell>
-                  {category.isActive ? (
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">
-                      Aktiv
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-400">
-                      Passiv
-                    </span>
-                  )}
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/admin/categories/${category.id}`}
-                      className="rounded-lg border border-border p-2 transition hover:bg-muted"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Link>
-
-                    <Link
-                      href={`/admin/categories/${category.id}/edit`}
-                      className="rounded-lg bg-primary p-2 text-primary-foreground transition hover:opacity-90"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Link>
-                  </div>
+            {filteredCategories.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                  Kateqoriya tapılmadı.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredCategories.map((category) => (
+                <TableRow key={category.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <FolderTree className="h-4 w-4 text-emerald-600" />
+                      <div>
+                        <p className="font-semibold">
+                          {category.name}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    {category.slug}
+                  </TableCell>
+
+                  <TableCell>
+                    {category.parentCategoryName || "-"}
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="flex items-center justify-center gap-2">
+                      <Link
+                        href={`/admin/categories/${category.id}/edit`}
+                        className="rounded-lg bg-primary p-2 text-primary-foreground transition hover:opacity-90"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+
+                      <button
+                        onClick={() => handleDelete(category.id, category.name)}
+                        className="rounded-lg bg-destructive p-2 text-destructive-foreground transition hover:opacity-90"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

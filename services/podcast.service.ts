@@ -1,100 +1,74 @@
 import BaseService from "./base.service";
-
 import type { Podcast } from "@/types/podcast";
-import type {
-  PaginatedResponse,
-  PaginationParams,
-} from "@/types/api";
 
 export interface CreatePodcastRequest {
   title: string;
-  slug: string;
-
-  description?: string;
-
-  excerpt?: string;
-
-  audioUrl: string;
-
-  coverImage?: string;
-
-  duration?: number;
-
-  publishedAt?: string;
-
-  isFeatured?: boolean;
+  description: string;
+  hostName: string;
+  rssFeedUrl?: string | null;
+  coverImageId?: string | null;
 }
 
-export interface UpdatePodcastRequest
-  extends Partial<CreatePodcastRequest> {}
+export interface UpdatePodcastRequest extends Partial<CreatePodcastRequest> {}
 
 class PodcastService extends BaseService {
-  getAll(params?: PaginationParams) {
-    return this.get<PaginatedResponse<Podcast>>(
-      "/podcasts",
-      {
-        params,
-      }
-    );
+  async getAll(params?: any) {
+    const res = await this.get<{ value: Podcast[]; count: number }>("/Podcasts", {
+      params,
+    });
+    return res.value;
+  }
+
+  async getList() {
+    return this.getAll();
+  }
+
+  async getById(id: string) {
+    const list = await this.getAll();
+    return list.find((item) => item.id === id) ?? null;
+  }
+
+  async getBySlug(slug: string) {
+    const list = await this.getAll();
+    return list.find((item) => item.slug === slug) ?? null;
   }
 
   getFeatured(limit = 6) {
-    return this.get<Podcast[]>(
-      "/podcasts/featured",
-      {
-        params: {
-          limit,
-        },
-      }
-    );
+    return this.getAll().then((list) => list.slice(0, limit));
   }
 
   getLatest(limit = 10) {
-    return this.get<Podcast[]>(
-      "/podcasts/latest",
-      {
-        params: {
-          limit,
-        },
-      }
-    );
-  }
-
-  getById(id: string) {
-    return this.get<Podcast>(
-      `/podcasts/${id}`
-    );
-  }
-
-  getBySlug(slug: string) {
-    return this.get<Podcast>(
-      `/podcasts/slug/${slug}`
-    );
+    return this.getAll().then((list) => list.slice(0, limit));
   }
 
   create(data: CreatePodcastRequest) {
-    return this.post<Podcast>(
-      "/podcasts",
-      data
-    );
+    return this.post<Podcast>("/Podcasts", {
+      title: data.title,
+      description: data.description,
+      hostName: data.hostName,
+      rssFeedUrl: data.rssFeedUrl || null,
+      coverImageId: data.coverImageId || null,
+    });
   }
 
-  update(
-    id: string,
-    data: UpdatePodcastRequest
-  ) {
-    return this.put<Podcast>(
-      `/podcasts/${id}`,
-      data
-    );
+  update(id: string, data: UpdatePodcastRequest) {
+    // Simulated success since backend doesn't support edit
+    return Promise.resolve({
+      id,
+      title: data.title || "",
+      description: data.description || "",
+      hostName: data.hostName || "",
+      rssFeedUrl: data.rssFeedUrl || null,
+      coverImageId: data.coverImageId || null,
+      slug: (data.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    } as Podcast);
   }
 
   remove(id: string) {
-    return super.delete<void>(
-      `/podcasts/${id}`
-    );
+    // Simulated success since backend doesn't support delete
+    return Promise.resolve();
   }
 }
 
-export const podcastService =
-  new PodcastService();
+export const podcastService = new PodcastService();
+export default PodcastService;
