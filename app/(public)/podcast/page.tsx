@@ -1,10 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Headphones, Clock3, PlayCircle } from "lucide-react";
+import type { Podcast } from "@/types";
+import podcastService from "@/services/podcast.service";
 
-import { podcasts } from "@/mocks/podcasts";
+export default async function PodcastPage() {
+  const response = await podcastService.getPublished({
+    page: 1,
+    pageSize: 12,
+  });
 
-export default function PodcastPage() {
+  const podcasts = response.items ?? [];
+
   const featured = podcasts[0];
   const episodes = podcasts.slice(1);
 
@@ -33,7 +40,7 @@ export default function PodcastPage() {
           >
             <div className="relative aspect-video overflow-hidden rounded-2xl">
               <Image
-                src={featured.coverImage}
+                src={featured.coverImage || "/images/placeholder.jpg"}
                 alt={featured.title}
                 fill
                 className="object-cover transition duration-500 group-hover:scale-105"
@@ -56,15 +63,17 @@ export default function PodcastPage() {
               </h2>
 
               <p className="mt-5 text-muted-foreground">
-                {featured.description}
+                {featured.summary}
               </p>
 
               <div className="mt-6 flex flex-wrap gap-5 text-sm text-muted-foreground">
-                <span>{featured.guest}</span>
+                <span>
+                  {featured.author?.fullName ?? "Capitalist"}
+                </span>
 
                 <span className="flex items-center gap-1">
                   <Clock3 className="h-4 w-4" />
-                  {featured.duration}
+                  {featured.duration ?? "-"}
                 </span>
               </div>
             </div>
@@ -72,7 +81,7 @@ export default function PodcastPage() {
         )}
 
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {episodes.map((episode) => (
+          {episodes.map((episode: Podcast) => (
             <Link
               key={episode.id}
               href={`/podcast/${episode.slug}`}
@@ -80,7 +89,10 @@ export default function PodcastPage() {
             >
               <div className="relative aspect-video overflow-hidden">
                 <Image
-                  src={episode.coverImage}
+                  src={
+                    episode.coverImageUrl ||
+                    "/images/placeholder.jpg"
+                  }
                   alt={episode.title}
                   fill
                   className="object-cover transition duration-500 group-hover:scale-105"
@@ -93,16 +105,16 @@ export default function PodcastPage() {
                 </h3>
 
                 <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                  {episode.description}
+                  {episode.summary}
                 </p>
 
                 <div className="mt-5 flex items-center justify-between text-sm text-muted-foreground">
                   <span className="flex items-center gap-2">
                     <Headphones className="h-4 w-4" />
-                    {episode.guest}
+                    {episode.author?.fullName ?? "Capitalist"}
                   </span>
 
-                  <span>{episode.duration}</span>
+                  <span>{episode.duration ?? "-"}</span>
                 </div>
               </div>
             </Link>

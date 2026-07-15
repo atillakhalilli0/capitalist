@@ -13,41 +13,48 @@ type AdminLayoutProps = Readonly<{
   children: React.ReactNode;
 }>;
 
+const PUBLIC_ADMIN_ROUTES = [
+  "/admin/login",
+  "/admin/register",
+];
+
 export default function AdminLayout({
   children,
 }: AdminLayoutProps) {
-
   const pathname = usePathname();
-
   const router = useRouter();
-  const PUBLIC_ADMIN_ROUTES = [
-    "/admin/login",
-    "/admin/register",
-  ];
 
   const isPublicRoute =
     PUBLIC_ADMIN_ROUTES.includes(pathname);
 
-  const { accessToken, isAuthenticated, logout } =
-    useAuthStore();
+  const {
+    hydrated,
+    accessToken,
+    isAuthenticated,
+    logout,
+  } = useAuthStore();
 
   const {
     data,
     isSuccess,
     isError,
   } = useProfile({
-    enabled: !isPublicRoute && !!accessToken,
+    enabled:
+      hydrated &&
+      !isPublicRoute &&
+      !!accessToken,
   });
 
   useEffect(() => {
-    if (isPublicRoute) {
-      return;
-    }
+    if (!hydrated) return;
+
+    if (isPublicRoute) return;
 
     if (!accessToken || !isAuthenticated) {
       router.replace("/admin/login");
     }
   }, [
+    hydrated,
     accessToken,
     isAuthenticated,
     isPublicRoute,
@@ -60,29 +67,31 @@ export default function AdminLayout({
         user: data,
       });
     }
-  }, [data, isSuccess]);
+  }, [isSuccess, data]);
 
   useEffect(() => {
+    if (!hydrated) return;
+
     if (isError) {
       logout();
-
       router.replace("/admin/login");
     }
   }, [
+    hydrated,
     isError,
     logout,
     router,
   ]);
 
-  if (pathname === "/admin/login") {
-    return children;
+  if (!hydrated) {
+    return null;
   }
 
   if (isPublicRoute) {
     return children;
   }
 
-  if (!accessToken) {
+  if (!accessToken || !isAuthenticated) {
     return null;
   }
 

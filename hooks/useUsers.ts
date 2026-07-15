@@ -34,13 +34,6 @@ export function useUser(id?: string) {
   });
 }
 
-export function useProfile() {
-  return useQuery({
-    queryKey: ["profile"],
-    queryFn: () => userService.getProfile(),
-  });
-}
-
 export function useCreateUser() {
   const queryClient = useQueryClient();
 

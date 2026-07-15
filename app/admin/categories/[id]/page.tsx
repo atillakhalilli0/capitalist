@@ -106,11 +106,10 @@ export default async function CategoryPreviewPage({
                 </p>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    category.isActive
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${category.isActive
                       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                       : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                  }`}
+                    }`}
                 >
                   {category.isActive
                     ? "Aktiv"
@@ -124,7 +123,7 @@ export default async function CategoryPreviewPage({
                 </p>
 
                 <p className="font-semibold">
-                  {category.parent?.name || "Yoxdur"}
+                  {category.parentCategoryName || "Yoxdur"}
                 </p>
               </div>
             </div>

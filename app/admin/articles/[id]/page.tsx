@@ -155,7 +155,7 @@ export default function ArticlePreviewPage({
                 </span>
 
                 <span className="font-semibold">
-                  {article.author?.fullName || "Bilinmir"}
+                  {article.author?.name || "Bilinmir"}
                 </span>
               </div>
 

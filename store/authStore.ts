@@ -14,6 +14,8 @@ interface AuthState {
 
   isAuthenticated: boolean;
 
+  hydrated: boolean;
+
   login: (payload: {
     user: UserProfile;
     accessToken: string;
@@ -27,23 +29,25 @@ interface AuthState {
   setAccessToken: (token: string) => void;
 
   setRefreshToken: (token: string) => void;
+
+  setHydrated: () => void;
 }
 
-// proxy.ts (server middleware) can only read cookies, not localStorage,
-// so the access token has to be mirrored into a cookie here. This is a
-// plain (non-httpOnly) cookie set from the client, which is fine for
-// local dev but not how you'd want to do auth in production - a real
-// setup would have the backend set an httpOnly cookie directly.
 function setAccessTokenCookie(token: string | null) {
   if (typeof document === "undefined") return;
 
   if (!token) {
     document.cookie =
-      "accessToken=; path=/; max-age=0";
+      "accessToken=; Path=/; Max-Age=0; SameSite=Lax";
     return;
   }
 
-  document.cookie = `accessToken=${token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+  document.cookie = [
+    `accessToken=${token}`,
+    "Path=/",
+    `Max-Age=${60 * 60 * 24 * 7}`,
+    "SameSite=Lax",
+  ].join("; ");
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -56,6 +60,8 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
 
       isAuthenticated: false,
+
+      hydrated: false,
 
       login: ({
         user,
@@ -93,6 +99,7 @@ export const useAuthStore = create<AuthState>()(
 
         set({
           accessToken,
+          isAuthenticated: !!accessToken,
         });
       },
 
@@ -100,9 +107,22 @@ export const useAuthStore = create<AuthState>()(
         set({
           refreshToken,
         }),
+
+      setHydrated: () =>
+        set({
+          hydrated: true,
+        }),
     }),
     {
       name: "auth-storage",
+
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated();
+
+        const token = state?.accessToken ?? null;
+
+        setAccessTokenCookie(token);
+      },
     }
   )
 );

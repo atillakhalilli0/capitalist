@@ -146,7 +146,7 @@ export default function AdminArticlesPage() {
                   </TableCell>
 
                   <TableCell>
-                    {article.author?.fullName || "-"}
+                    {article.author?.name || "-"}
                   </TableCell>
 
                   <TableCell>

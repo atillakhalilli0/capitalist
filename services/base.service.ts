@@ -1,21 +1,23 @@
 import { AxiosRequestConfig } from "axios";
 import api from "@/lib/axios";
 
+export interface ApiListResponse<T> {
+  value: T[];
+  count: number;
+}
+
+export interface ApiResponse<T> {
+  value: T;
+}
+
 class BaseService {
   protected api = api;
-
-  // Constructor is no longer needed since we reuse the shared client instance
-  constructor() {}
 
   protected async get<T>(
     url: string,
     config?: AxiosRequestConfig
   ): Promise<T> {
-    const response = await this.api.get<T>(
-      url,
-      config
-    );
-
+    const response = await this.api.get<T>(url, config);
     return response.data;
   }
 

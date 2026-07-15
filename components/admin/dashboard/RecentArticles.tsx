@@ -90,7 +90,7 @@ export default function RecentArticles() {
                   </TableCell>
 
                   <TableCell>
-                    {article.author?.fullName || "-"}
+                    {article.author?.name || "-"}
                   </TableCell>
 
                   <TableCell>

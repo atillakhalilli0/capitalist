@@ -1,8 +1,13 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Clock3, Headphones, CalendarDays, PlayCircle } from "lucide-react";
+import {
+  Clock3,
+  Headphones,
+  CalendarDays,
+  PlayCircle,
+} from "lucide-react";
 
-import { podcasts } from "@/mocks/podcasts";
+import podcastService from "@/services/podcast.service";
 
 type PodcastEpisodePageProps = {
   params: Promise<{
@@ -15,13 +20,15 @@ export default async function PodcastEpisodePage({
 }: PodcastEpisodePageProps) {
   const { slug } = await params;
 
-  const episode = podcasts.find((item) => item.slug === slug);
+  const episode = await podcastService.getBySlug(slug);
 
   if (!episode) {
     notFound();
   }
 
-  const relatedEpisodes = podcasts
+  const list = await podcastService.getList();
+
+  const relatedEpisodes = list
     .filter((item) => item.id !== episode.id)
     .slice(0, 3);
 
@@ -32,7 +39,11 @@ export default async function PodcastEpisodePage({
           <div>
             <div className="relative aspect-square overflow-hidden rounded-3xl border border-border">
               <Image
-                src={episode.coverImage}
+                src={
+                  episode.coverImageUrl ??
+                  episode.coverImage ??
+                  "/images/placeholder.jpg"
+                }
                 alt={episode.title}
                 fill
                 className="object-cover"
@@ -50,39 +61,49 @@ export default async function PodcastEpisodePage({
             </h1>
 
             <p className="mt-5 text-lg leading-8 text-muted-foreground">
-              {episode.description}
+              {episode.summary ?? episode.description}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-6 text-sm text-muted-foreground">
               <span className="flex items-center gap-2">
                 <Headphones className="h-4 w-4" />
-                {episode.guest}
+                {episode.author?.fullName ??
+                  episode.hostName ??
+                  episode.guest ??
+                  "-"}
               </span>
 
               <span className="flex items-center gap-2">
                 <Clock3 className="h-4 w-4" />
-                {episode.duration}
+                {episode.duration ?? "-"}
               </span>
 
-              <span className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
-                {new Date(episode.publishedAt).toLocaleDateString("az-AZ")}
-              </span>
+              {episode.publishedAt && (
+                <span className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  {new Date(
+                    episode.publishedAt
+                  ).toLocaleDateString("az-AZ")}
+                </span>
+              )}
             </div>
 
             <div className="mt-10 flex flex-wrap gap-4">
-              <a
-                href={episode.audioUrl}
-                className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700"
-              >
-                <PlayCircle className="h-5 w-5" />
-                Dinlə
-              </a>
+              {episode.audioUrl && (
+                <a
+                  href={episode.audioUrl}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700"
+                >
+                  <PlayCircle className="h-5 w-5" />
+                  Dinlə
+                </a>
+              )}
 
               {episode.spotifyUrl && (
                 <a
                   href={episode.spotifyUrl}
                   target="_blank"
+                  rel="noreferrer"
                   className="rounded-2xl border border-border px-6 py-3 font-semibold hover:bg-muted"
                 >
                   Spotify
@@ -93,6 +114,7 @@ export default async function PodcastEpisodePage({
                 <a
                   href={episode.applePodcastUrl}
                   target="_blank"
+                  rel="noreferrer"
                   className="rounded-2xl border border-border px-6 py-3 font-semibold hover:bg-muted"
                 >
                   Apple Podcasts
@@ -103,6 +125,7 @@ export default async function PodcastEpisodePage({
                 <a
                   href={episode.youtubeUrl}
                   target="_blank"
+                  rel="noreferrer"
                   className="rounded-2xl border border-border px-6 py-3 font-semibold hover:bg-muted"
                 >
                   YouTube
@@ -136,7 +159,11 @@ export default async function PodcastEpisodePage({
               >
                 <div className="relative aspect-video">
                   <Image
-                    src={item.coverImage}
+                    src={
+                      item.coverImageUrl ??
+                      item.coverImage ??
+                      "/images/placeholder.jpg"
+                    }
                     alt={item.title}
                     fill
                     className="object-cover"
@@ -149,11 +176,11 @@ export default async function PodcastEpisodePage({
                   </h3>
 
                   <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                    {item.description}
+                    {item.summary ?? item.description}
                   </p>
 
                   <div className="mt-5 text-sm text-muted-foreground">
-                    {item.duration}
+                    {item.duration ?? "-"}
                   </div>
                 </div>
               </a>

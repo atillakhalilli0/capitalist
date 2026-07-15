@@ -25,7 +25,7 @@ export default function HomePage() {
         {
           categories
             .filter((category) => category.isActive)
-            .sort((a, b) => a.order - b.order)
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((category) => (
               <CategoryBlock
                 key={category.id}

@@ -3,24 +3,35 @@ export interface Podcast {
   slug: string;
   title: string;
   description: string;
-  
-  // Backend properties
+
   hostName?: string | null;
   rssFeedUrl?: string | null;
   coverImageId?: string | null;
-  
-  // Compatibility properties
+
   excerpt?: string;
+  summary?: string;
+
   coverImage?: string;
+  coverImageUrl?: string;
+
   guest?: string;
   host?: string;
   duration?: string;
+
+  author?: {
+    id: string;
+    fullName: string;
+    avatar?: string | null;
+  };
+
   audioUrl?: string;
   youtubeUrl?: string;
   spotifyUrl?: string;
   applePodcastUrl?: string;
+
   publishedAt?: string;
   featured?: boolean;
+
   categories?: string[];
   tags?: string[];
 }

@@ -58,8 +58,14 @@ export default async function ArticlePage({
           />
 
           <div>
-            <ArticleContent content={article.content} />
-
+            {typeof article.content === "string" ? (
+              <div
+                className="prose prose-neutral dark:prose-invert max-w-none font-serif text-lg leading-8 text-foreground/90"
+                dangerouslySetInnerHTML={{ __html: article.content }}
+              />
+            ) : (
+              <ArticleContent content={article.content} />
+            )}
             <SourcesBox
               sources={[
                 {

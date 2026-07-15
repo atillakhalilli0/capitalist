@@ -1,8 +1,10 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowRight, Building2, CalendarDays } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+} from "lucide-react";
 
-import { specialProjects } from "@/mocks/special-projects";
+import { projectService } from "@/services/project.service";
 
 type SpecialProjectPageProps = {
   params: Promise<{
@@ -15,9 +17,8 @@ export default async function SpecialProjectPage({
 }: SpecialProjectPageProps) {
   const { slug } = await params;
 
-  const project = specialProjects.find(
-    (item) => item.slug === slug
-  );
+  const project =
+    await projectService.getBySlug(slug);
 
   if (!project) {
     notFound();
@@ -25,47 +26,28 @@ export default async function SpecialProjectPage({
 
   return (
     <>
-      <section className="relative overflow-hidden">
-        <div className="relative h-[55vh] min-h-[420px]">
-          <Image
-            src={project.coverImage ?? "/images/placeholder.jpg"}
-            alt={project.title}
-            fill
-            priority
-            className="object-cover"
-          />
+      <section className="relative overflow-hidden bg-muted">
+        <div className="flex min-h-[420px] items-end">
+          <div className="mx-auto w-full max-w-7xl px-4 pb-14">
+            <span className="inline-flex rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white">
+              Special Project
+            </span>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+            <h1 className="mt-6 max-w-4xl text-4xl font-black leading-tight md:text-6xl">
+              {project.title}
+            </h1>
 
-          <div className="absolute inset-x-0 bottom-0">
-            <div className="mx-auto max-w-7xl px-4 pb-14">
-              <span className="inline-flex rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white">
-                Special Project
+            {project.description && (
+              <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
+                {project.description}
+              </p>
+            )}
+
+            <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Xüsusi Layihə
               </span>
-
-              <h1 className="mt-6 max-w-4xl text-4xl font-black leading-tight text-white md:text-6xl">
-                {project.title}
-              </h1>
-
-              {project.excerpt && (
-                <p className="mt-6 max-w-3xl text-lg leading-8 text-white/80">
-                  {project.excerpt}
-                </p>
-              )}
-
-              <div className="mt-8 flex flex-wrap gap-6 text-sm text-white/80">
-                <span className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  Sponsor layihə
-                </span>
-
-                {project.publishedAt && (
-                  <span className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4" />
-                    {new Date(project.publishedAt).toLocaleDateString("az-AZ")}
-                  </span>
-                )}
-              </div>
             </div>
           </div>
         </div>
@@ -78,44 +60,25 @@ export default async function SpecialProjectPage({
               <h2>Layihə haqqında</h2>
 
               <p>
-                {project.excerpt}
+                {project.description ??
+                  "Layihə haqqında məlumat əlavə edilməyib."}
               </p>
 
-              <p>
-                Bu səhifə xüsusi sponsor layihələri üçün hazırlanmış premium
-                template-dir. CMS-dən gələn bloklar (hero, video, qalereya,
-                statistika, komanda, FAQ, CTA və s.) burada dinamik şəkildə
-                render olunacaq.
-              </p>
-
-              <blockquote>
-                Premium branded content istifadəçi təcrübəsini pozmadan,
-                redaksiya keyfiyyətini qoruyaraq təqdim edilir.
-              </blockquote>
-
-              <h3>Layihənin məqsədi</h3>
-
-              <p>
-                Azərbaycan biznes ekosistemində uğurlu şirkətlər, innovasiya,
-                investisiya və texnologiya mövzularını daha dərin formatda
-                təqdim etmək.
-              </p>
+              <pre className="mt-8 overflow-x-auto rounded-xl bg-muted p-6 text-sm">
+                {project.layoutData}
+              </pre>
             </div>
 
             <div className="mt-12 rounded-2xl bg-muted p-8">
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-sm uppercase tracking-[0.24em] text-emerald-600">
-                    Sponsor
+                    ENews
                   </p>
 
                   <h3 className="mt-2 text-2xl font-bold">
-                    Capitalist Business Studio
+                    Special Project
                   </h3>
-
-                  <p className="mt-2 text-muted-foreground">
-                    Brendiniz üçün xüsusi media layihələri hazırlayırıq.
-                  </p>
                 </div>
 
                 <button className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700">
