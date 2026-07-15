@@ -8,7 +8,9 @@ export type { Tag } from "./tag";
 // These are placeholder orderings based on typical CMS workflows.
 export enum ArticleStatus {
   DRAFT = 0,
+  IN_REVIEW = 1,
   PUBLISHED = 2,
+  ARCHIVED = 3,
 }
 
 // TODO: confirm actual numeric values with the backend.
