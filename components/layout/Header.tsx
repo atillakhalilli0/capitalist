@@ -3,23 +3,20 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search, X, Calendar } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import Container from "./Container";
 import ThemeToggle from "./ThemeToggle";
-import { Button } from "@/components/ui/button";
-import NewsTicker from "../home/NewsTicker";
+import { useCategories } from "@/hooks/useCategories";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  const categories = [
-    { name: "Biznes", href: "/biznes" },
-    { name: "Maliyyə", href: "/maliyye" },
-    { name: "İqtisadiyyat", href: "/iqtisadiyyat" },
-    { name: "Startap", href: "/startap" },
-    { name: "Texnologiya", href: "/texnologiya" },
-  ];
+  const { data: categoriesData } = useCategories();
+
+  const navCategories = (categoriesData ?? [])
+    .filter((category) => !category.parentCategoryId)
+    .map((category) => ({ name: category.name, href: `/${category.slug}` }));
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-md transition-colors duration-300">
@@ -36,7 +33,7 @@ export default function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden items-center gap-8 lg:flex">
-            {categories.map((category) => {
+            {navCategories.map((category) => {
               const isActive = pathname === category.href;
               return (
                 <Link
@@ -52,7 +49,7 @@ export default function Header() {
                   )}
                 </Link>
               );
-            })}
+            }).slice(5)}
           </nav>
 
           {/* Action Bar */}
@@ -86,13 +83,12 @@ export default function Header() {
           </div>
         </div>
       </Container>
-      {/* <NewsTicker /> */}
 
       {/* Mobile Nav Overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-x-0 top-20 bottom-0 z-40 flex flex-col bg-background/98 p-6 backdrop-blur-lg lg:hidden animate-in fade-in slide-in-from-top-5 duration-200">
           <nav className="flex flex-col gap-6 py-8">
-            {categories.map((category) => {
+            {navCategories.map((category) => {
               const isActive = pathname === category.href;
               return (
                 <Link

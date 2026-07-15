@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import {
-  ArrowRight,
-  Building2,
-} from "lucide-react";
+import { ArrowRight, Building2 } from "lucide-react";
+import Link from "next/link";
 
 import { projectService } from "@/services/project.service";
+import { SpecialProjectStatus } from "@/types/project";
+import { getProjectSlug } from "@/utils/publicHelpers";
 
 type SpecialProjectPageProps = {
   params: Promise<{
@@ -12,13 +12,18 @@ type SpecialProjectPageProps = {
   }>;
 };
 
-export default async function SpecialProjectPage({
-  params,
-}: SpecialProjectPageProps) {
+export default async function SpecialProjectPage({ params }: SpecialProjectPageProps) {
   const { slug } = await params;
 
-  const project =
-    await projectService.getBySlug(slug);
+  // The backend never returns a slug for special projects, so the list is
+  // fetched and matched against a slug derived from the title (or the id).
+  const projects = await projectService.getAll();
+
+  const project = projects.find(
+    (item) =>
+      item.status === SpecialProjectStatus.PUBLISHED &&
+      (getProjectSlug(item) === slug || item.id === slug)
+  );
 
   if (!project) {
     notFound();
@@ -59,12 +64,9 @@ export default async function SpecialProjectPage({
             <div className="prose prose-neutral dark:prose-invert max-w-none">
               <h2>Layihə haqqında</h2>
 
-              <p>
-                {project.description ??
-                  "Layihə haqqında məlumat əlavə edilməyib."}
-              </p>
+              <p>{project.description ?? "Layihə haqqında məlumat əlavə edilməyib."}</p>
 
-              <pre className="mt-8 overflow-x-auto rounded-xl bg-muted p-6 text-sm">
+              <pre className="mt-8 overflow-x-auto whitespace-pre-wrap rounded-xl bg-muted p-6 text-sm">
                 {project.layoutData}
               </pre>
             </div>
@@ -72,19 +74,18 @@ export default async function SpecialProjectPage({
             <div className="mt-12 rounded-2xl bg-muted p-8">
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.24em] text-emerald-600">
-                    ENews
-                  </p>
+                  <p className="text-sm uppercase tracking-[0.24em] text-emerald-600">Capitalist</p>
 
-                  <h3 className="mt-2 text-2xl font-bold">
-                    Special Project
-                  </h3>
+                  <h3 className="mt-2 text-2xl font-bold">Special Project</h3>
                 </div>
 
-                <button className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700">
+                <Link
+                  href="/elaqe"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700"
+                >
                   Əlaqə saxla
                   <ArrowRight className="h-4 w-4" />
-                </button>
+                </Link>
               </div>
             </div>
           </div>

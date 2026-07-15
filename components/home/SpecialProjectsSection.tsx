@@ -4,10 +4,15 @@ import Link from "next/link";
 import { ArrowRight, Building } from "lucide-react";
 
 import { useProjects } from "@/hooks/useProjects";
+import { getProjectSlug } from "@/utils/publicHelpers";
+import { SpecialProjectStatus } from "@/types/project";
 
 export default function SpecialProjectsSection() {
-  const { data: projects = [], isLoading } =
-    useProjects();
+  const { data: allProjects = [], isLoading } = useProjects();
+
+  const projects = allProjects.filter(
+    (project) => project.status === SpecialProjectStatus.PUBLISHED
+  );
 
   if (isLoading) return null;
 
@@ -53,9 +58,7 @@ export default function SpecialProjectsSection() {
                 </div>
 
                 <Link
-                  href={`/layihe/${
-                    project.slug ?? project.id
-                  }`}
+                  href={`/layihe/${getProjectSlug(project)}`}
                   className="inline-flex items-center gap-2 rounded bg-accent px-6 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-accent-foreground transition hover:opacity-90"
                 >
                   Layihəyə bax

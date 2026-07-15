@@ -1,19 +1,27 @@
 "use client";
 
-import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Mail, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useSubscribe } from "@/hooks/useSubscribers";
 
 export default function NewsletterCTA() {
   const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
+  const { mutateAsync: subscribe, isPending, isSuccess } = useSubscribe();
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email.trim()) return;
-    setSubscribed(true);
-    setEmail("");
-    setTimeout(() => setSubscribed(false), 3000);
+
+    setError(null);
+
+    try {
+      await subscribe({ email });
+      setEmail("");
+    } catch {
+      setError("Abunəlik uğursuz oldu, yenidən cəhd edin.");
+    }
   };
 
   return (
@@ -32,12 +40,10 @@ export default function NewsletterCTA() {
             Hər həftə seçilmiş analitika, bazar xəbərləri, startap yenilikləri və xüsusi hesabatlar birbaşa poçt qutunuza göndərilsin.
           </p>
 
-          {subscribed ? (
+          {isSuccess ? (
             <div className="mx-auto max-w-md rounded-lg border border-accent/20 bg-accent/5 p-6 text-center animate-in fade-in zoom-in-95 duration-200">
               <CheckCircle2 className="mx-auto h-8 w-8 text-accent" />
-              <h3 className="mt-3 text-lg font-bold text-foreground">
-                Abunə tamamlandı
-              </h3>
+              <h3 className="mt-3 text-lg font-bold text-foreground">Abunə tamamlandı</h3>
             </div>
           ) : (
             <form
@@ -55,13 +61,16 @@ export default function NewsletterCTA() {
 
               <button
                 type="submit"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded bg-primary px-6 font-mono text-[10px] font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                disabled={isPending}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded bg-primary px-6 font-mono text-[10px] font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-60"
               >
-                Abunə ol
-                <ArrowRight className="h-4 w-4" />
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Abunə ol"}
+                {!isPending && <ArrowRight className="h-4 w-4" />}
               </button>
             </form>
           )}
+
+          {error && <p className="text-xs font-medium text-destructive">{error}</p>}
 
           <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             Spam göndərmirik. İstənilən vaxt abunəliyi ləğv edə bilərsiniz.

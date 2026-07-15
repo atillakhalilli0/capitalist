@@ -1,9 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import Container from "./Container";
 import { FaGithub, FaXTwitter, FaLinkedin } from "react-icons/fa6";
 import { ArrowUpRight, Rss } from "lucide-react";
+import { useCategories } from "@/hooks/useCategories";
 
 export default function Footer() {
+  const { data: categoriesData } = useCategories();
+
+  const footerCategories = (categoriesData ?? [])
+    .filter((category) => !category.parentCategoryId)
+    .slice(0, 5);
+
   return (
     <footer className="mt-28 border-t border-border bg-card/60 transition-colors duration-300">
       <Container>
@@ -59,21 +68,16 @@ export default function Footer() {
             </h3>
 
             <ul className="space-y-4 text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
-              <li>
-                <Link href="/biznes" className="hover:text-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none transition-colors">Biznes</Link>
-              </li>
-              <li>
-                <Link href="/maliyye" className="hover:text-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none transition-colors">Maliyyə</Link>
-              </li>
-              <li>
-                <Link href="/iqtisadiyyat" className="hover:text-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none transition-colors">İqtisadiyyat</Link>
-              </li>
-              <li>
-                <Link href="/startap" className="hover:text-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none transition-colors">Startap</Link>
-              </li>
-              <li>
-                <Link href="/texnologiya" className="hover:text-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none transition-colors">Texnologiya</Link>
-              </li>
+              {footerCategories.map((category) => (
+                <li key={category.id}>
+                  <Link
+                    href={`/${category.slug}`}
+                    className="hover:text-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

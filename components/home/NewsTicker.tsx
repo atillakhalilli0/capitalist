@@ -1,37 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { getBreakingArticles } from "@/mocks/articles";
+import { useArticles } from "@/hooks/useArticles";
+import { ArticleStatus } from "@/types/article";
+import { getArticleUrl } from "@/utils/publicHelpers";
 
 export default function NewsTicker() {
-  const breakingNews = getBreakingArticles();
+  // The backend has no "breaking news" flag, so the most recently
+  // published articles are used to drive the live ticker.
+  const { data } = useArticles({
+    pageNumber: 1,
+    pageSize: 8,
+    sortBy: "publishedAt",
+    sortOrder: "desc",
+  });
 
-  // If there are no breaking articles, use some fallback mock alerts
-  const displayAlerts = breakingNews.length > 0 
-    ? breakingNews 
-    : [
-        {
-          id: "alert-1",
-          title: "Azərbaycan Mərkəzi Bankı faiz dərəcəsini sabit saxladı",
-          slug: "amb-faiz-dehlizini-sabit-saxladi",
-          category: { slug: "maliyye" }
-        },
-        {
-          id: "alert-2",
-          title: "SOCAR yeni bərpa olunan enerji layihələrinə investisiya ayırır",
-          slug: "yasil-enerji-layihelerine-investisiya",
-          category: { slug: "enerji" }
-        },
-        {
-          id: "alert-3",
-          title: "Startap ekosisteminə ayrılan dövlət investisiyaları artırıldı",
-          slug: "kob-dovlet-desteyi-proqrami",
-          category: { slug: "startap" }
-        }
-      ];
+  const alerts = data?.items ?? [];
+
+  if (alerts.length === 0) return null;
 
   return (
-    <section 
+    <section
       className="border-b border-border bg-card text-foreground transition-colors duration-300"
       aria-label="Breaking News"
     >
@@ -48,14 +37,13 @@ export default function NewsTicker() {
         {/* Ticker Container */}
         <div className="relative flex-1 overflow-hidden">
           <div className="ticker flex min-w-max items-center gap-16 px-6 font-mono text-[11px] font-semibold uppercase tracking-wider">
-            {[...displayAlerts, ...displayAlerts, ...displayAlerts].map((item, index) => (
+            {[...alerts, ...alerts, ...alerts].map((item, index) => (
               <Link
                 key={`${item.id}-${index}`}
-                href={`/${item.category.slug}/${item.slug}`}
+                href={getArticleUrl(item)}
                 className="flex items-center gap-3 whitespace-nowrap transition-colors duration-200 hover:text-accent focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
               >
                 <span className="text-accent">•</span>
-                <span className="text-muted-foreground">[{new Date().toLocaleTimeString("az-AZ", {hour: '2-digit', minute:'2-digit'})}]</span>
                 <span className="text-foreground">{item.title}</span>
               </Link>
             ))}

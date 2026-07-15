@@ -1,7 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Article } from "@/types/article";
-import { Clock, Eye, Calendar } from "lucide-react";
+import { Eye } from "lucide-react";
+import {
+  getArticleCoverImage,
+  getArticleExcerpt,
+  getArticleReadingTime,
+  getArticleUrl,
+  getAuthorFullName,
+} from "@/utils/publicHelpers";
 
 type ArticleCardProps = {
   article: Article;
@@ -14,7 +21,11 @@ export default function ArticleCard({
   featured = false,
   compact = false,
 }: ArticleCardProps) {
-  const articleUrl = `/${article.category.slug}/${article.slug}`;
+  const articleUrl = getArticleUrl(article);
+  const coverImage = getArticleCoverImage(article);
+  const excerpt = getArticleExcerpt(article);
+  const readingTime = getArticleReadingTime(article);
+  const authorName = getAuthorFullName(article.author);
 
   // 1. Featured Variant (Large banner style)
   if (featured) {
@@ -23,7 +34,7 @@ export default function ArticleCard({
         <Link href={articleUrl} className="flex flex-col gap-6">
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-md bg-muted">
             <Image
-              src={article.coverImage ?? "/images/placeholder.jpg"}
+              src={coverImage}
               alt={article.title}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-103"
@@ -32,7 +43,7 @@ export default function ArticleCard({
 
           <div className="space-y-4">
             <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-accent">
-              {article.category.name}
+              {article.category?.name}
             </span>
 
             <h3 className="font-sans text-2xl font-black leading-tight tracking-tight text-foreground md:text-3xl group-hover:text-accent transition-colors duration-200">
@@ -40,15 +51,13 @@ export default function ArticleCard({
             </h3>
 
             <p className="font-sans text-sm leading-6 text-muted-foreground line-clamp-3">
-              {article.excerpt}
+              {excerpt}
             </p>
 
             <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-border/60 font-mono text-[10px] text-muted-foreground">
-              <span className="font-semibold text-foreground">
-                {article.author.name} {article.author.surname}
-              </span>
+              <span className="font-semibold text-foreground">{authorName}</span>
               <span>•</span>
-              <span>{article.readingTime} DƏQ</span>
+              <span>{readingTime} DƏQ</span>
               <span>•</span>
               <span>{article.viewCount.toLocaleString()} BAXIŞ</span>
             </div>
@@ -66,7 +75,7 @@ export default function ArticleCard({
           {/* Side Image */}
           <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-md bg-muted">
             <Image
-              src={article.coverImage ?? "/images/placeholder.jpg"}
+              src={coverImage}
               alt={article.title}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -77,7 +86,7 @@ export default function ArticleCard({
           <div className="flex flex-col justify-between min-w-0 flex-1">
             <div className="space-y-1">
               <span className="text-[8px] font-extrabold uppercase tracking-[0.25em] text-accent block">
-                {article.category.name}
+                {article.category?.name}
               </span>
 
               <h4 className="font-sans text-sm font-bold leading-snug text-foreground group-hover:text-accent transition-colors duration-200 line-clamp-2">
@@ -86,11 +95,9 @@ export default function ArticleCard({
             </div>
 
             <div className="flex items-center gap-3 font-mono text-[9px] text-muted-foreground pt-2">
-              <span className="font-semibold text-foreground truncate">
-                {article.author.name.charAt(0)}. {article.author.surname}
-              </span>
+              <span className="font-semibold text-foreground truncate">{authorName}</span>
               <span>•</span>
-              <span>{article.readingTime} DƏQ</span>
+              <span>{readingTime} DƏQ</span>
             </div>
           </div>
         </Link>
@@ -105,7 +112,7 @@ export default function ArticleCard({
         {/* Cover Image */}
         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-md bg-muted">
           <Image
-            src={article.coverImage ?? "/images/placeholder.jpg"}
+            src={coverImage}
             alt={article.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-103"
@@ -115,7 +122,7 @@ export default function ArticleCard({
         {/* Content */}
         <div className="space-y-3">
           <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-accent block">
-            {article.category.name}
+            {article.category?.name}
           </span>
 
           <h3 className="font-sans text-lg font-bold leading-snug text-foreground group-hover:text-accent transition-colors duration-200 line-clamp-3">
@@ -123,18 +130,16 @@ export default function ArticleCard({
           </h3>
 
           <p className="font-sans text-xs leading-5 text-muted-foreground line-clamp-3">
-            {article.excerpt}
+            {excerpt}
           </p>
         </div>
       </Link>
 
       {/* Footer Info */}
       <div className="mt-5 flex items-center gap-4 border-t border-border/60 pt-3 font-mono text-[10px] text-muted-foreground">
-        <span className="font-semibold text-foreground">
-          {article.author.name} {article.author.surname}
-        </span>
+        <span className="font-semibold text-foreground">{authorName}</span>
         <span>•</span>
-        <span>{article.readingTime} DƏQ</span>
+        <span>{readingTime} DƏQ</span>
         <span className="ml-auto flex items-center gap-1">
           <Eye className="h-3 w-3" />
           {article.viewCount.toLocaleString()}

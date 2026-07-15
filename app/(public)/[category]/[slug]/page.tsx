@@ -6,10 +6,10 @@ import ShareButtons from "@/components/article/ShareButtons";
 import ArticleContent from "@/components/article/ArticleContent";
 import AuthorBox from "@/components/article/AuthorBox";
 import RelatedArticles from "@/components/article/RelatedArticles";
-import SourcesBox from "@/components/article/SourcesBox";
 import NewsletterCTA from "@/components/article/NewsletterCTA";
 
-import { articles } from "@/mocks/articles";
+import { articleService } from "@/services/article.service";
+import { ArticleStatus } from "@/types/article";
 import type { Article } from "@/types/article";
 
 type ArticlePageProps = {
@@ -19,15 +19,18 @@ type ArticlePageProps = {
   }>;
 };
 
-export default async function ArticlePage({
-  params,
-}: ArticlePageProps) {
+export default async function ArticlePage({ params }: ArticlePageProps) {
   const { category, slug } = await params;
 
+  // The backend has no "get article by slug" endpoint, so published
+  // articles are fetched and matched by slug + category on the server.
+  const { items: articles } = await articleService.getAll({
+    pageNumber: 1,
+    pageSize: 10,
+  });
+
   const article = articles.find(
-    (item) =>
-      item.category.slug === category &&
-      item.slug === slug
+    (item) => item.category?.slug === category && item.slug === slug
   );
 
   if (!article) {
@@ -35,14 +38,14 @@ export default async function ArticlePage({
   }
 
   const relatedArticles: Article[] = articles
-    .filter(
-      (item) =>
-        item.id !== article.id &&
-        item.category.slug === article.category.slug
-    )
+    .filter((item) => item.id !== article.id && item.category?.slug === article.category?.slug)
     .slice(0, 3);
 
-  const articleUrl = `https://capitalist.az/${article.category.slug}/${article.slug}`;
+  const authorArticles = articles.filter((item) => item.author?.id === article.author?.id);
+  const authorArticleCount = authorArticles.length;
+  const authorTotalReads = authorArticles.reduce((sum, item) => sum + (item.viewCount ?? 0), 0);
+
+  const articleUrl = `https://capitalist.az/${article.category?.slug}/${article.slug}`;
 
   return (
     <>
@@ -52,37 +55,15 @@ export default async function ArticlePage({
 
       <section className="py-12">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 xl:grid-cols-[80px_minmax(0,760px)]">
-          <ShareButtons
-            url={articleUrl}
-            title={article.title}
-          />
+          <ShareButtons url={articleUrl} title={article.title} />
 
           <div>
-            {typeof article.content === "string" ? (
-              <div
-                className="prose prose-neutral dark:prose-invert max-w-none font-serif text-lg leading-8 text-foreground/90"
-                dangerouslySetInnerHTML={{ __html: article.content }}
-              />
-            ) : (
-              <ArticleContent content={article.content} />
-            )}
-            <SourcesBox
-              sources={[
-                {
-                  title: "Azərbaycan Mərkəzi Bankı",
-                  url: "https://cbar.az",
-                },
-                {
-                  title: "Dövlət Statistika Komitəsi",
-                  url: "https://stat.gov.az",
-                },
-              ]}
-            />
+            <ArticleContent content={article.content} />
 
             <AuthorBox
               author={article.author}
-              articleCount={42}
-              totalReads={186500}
+              articleCount={authorArticleCount}
+              totalReads={authorTotalReads}
             />
 
             <RelatedArticles articles={relatedArticles} />

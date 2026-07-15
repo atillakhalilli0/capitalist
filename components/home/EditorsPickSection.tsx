@@ -1,15 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { editorPickArticles } from "@/mocks/articles/editor-picks";
-import ArticleCard from "@/components/article/ArticleCard";
 import { Award } from "lucide-react";
+import ArticleCard from "@/components/article/ArticleCard";
+import { useArticles } from "@/hooks/useArticles";
+import { ArticleStatus } from "@/types/article";
 
 export default function EditorsPickSection() {
-  const featured = editorPickArticles[0];
-  const others = editorPickArticles.slice(1, 4);
+  // The backend has no "editor's pick" flag, so the most-viewed published
+  // articles are used as a stand-in for editorial highlights.
+  const { data, isLoading } = useArticles({
+    pageNumber: 1,
+    pageSize: 4,
+    sortBy: "viewCount",
+    sortOrder: "desc",
+  });
 
-  if (!featured) return null;
+  const items = data?.items ?? [];
+  const featured = items[0];
+  const others = items.slice(1, 4);
+
+  if (isLoading || !featured) return null;
 
   return (
     <section className="py-16 lg:py-24 border-t border-border bg-background transition-colors duration-300">
@@ -21,9 +32,7 @@ export default function EditorsPickSection() {
               <Award className="h-4 w-4" />
               Redaksiya
             </span>
-            <h2 className="mt-2 text-3xl font-black text-foreground">
-              Redaksiyanın seçimi
-            </h2>
+            <h2 className="mt-2 text-3xl font-black text-foreground">Redaksiyanın seçimi</h2>
           </div>
 
           <Link

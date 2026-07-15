@@ -1,25 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Mail, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, Mail, CheckCircle2, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useSubscribe } from "@/hooks/useSubscribers";
 
 export default function NewsletterForm() {
   const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { mutateAsync: subscribe, isPending, isSuccess, reset } = useSubscribe();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!email.trim()) return;
 
-    setSubscribed(true);
-    setEmail("");
+    setError(null);
 
-    setTimeout(() => {
-      setSubscribed(false);
-    }, 3000);
+    try {
+      await subscribe({ email });
+      setEmail("");
+
+      setTimeout(() => {
+        reset();
+      }, 3000);
+    } catch {
+      setError("Abunəlik uğursuz oldu. Yenidən cəhd edin.");
+    }
   };
 
   return (
@@ -61,13 +68,11 @@ export default function NewsletterForm() {
 
             {/* Input Form Block */}
             <div className="lg:col-span-5 flex items-center w-full">
-              {subscribed ? (
+              {isSuccess ? (
                 <div className="w-full rounded-lg border border-accent/20 bg-accent/5 p-8 text-center animate-in fade-in zoom-in-95 duration-200">
                   <CheckCircle2 className="mx-auto h-12 w-12 text-accent" />
 
-                  <h3 className="mt-5 text-xl font-bold text-foreground">
-                    Abunə tamamlandı
-                  </h3>
+                  <h3 className="mt-5 text-xl font-bold text-foreground">Abunə tamamlandı</h3>
 
                   <p className="mt-2 text-xs text-muted-foreground font-mono">
                     Təşəkkür edirik. İlk icmalı bazar ertəsi günü alacaqsınız.
@@ -104,11 +109,24 @@ export default function NewsletterForm() {
 
                   <button
                     type="submit"
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded bg-primary text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    disabled={isPending}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded bg-primary text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-60"
                   >
-                    Abunə ol
-                    <ArrowRight className="h-4 w-4" />
+                    {isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        Abunə ol
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
                   </button>
+
+                  {error && (
+                    <p className="text-[10px] font-medium text-destructive text-center">
+                      {error}
+                    </p>
+                  )}
 
                   <p className="text-[10px] text-muted-foreground font-mono text-center">
                     Abunə olmaqla gizlilik şərtlərini qəbul edirsiniz.

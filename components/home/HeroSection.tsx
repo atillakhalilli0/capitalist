@@ -1,13 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import Container from "@/components/layout/Container";
-import { featuredArticles } from "@/mocks/articles/featured";
-import { latestArticles } from "@/mocks/articles/latest";
 import { Clock, Eye, Calendar, Sparkles } from "lucide-react";
 
-export default function HeroSection() {
-  const featuredArticle = featuredArticles[0];
-  const sidebarArticles = latestArticles.slice(0, 3);
+import { articleService } from "@/services/article.service";
+import { ArticleStatus } from "@/types/article";
+import {
+  getArticleCoverImage,
+  getArticleExcerpt,
+  getArticleReadingTime,
+  getArticleUrl,
+  getAuthorFullName,
+} from "@/utils/publicHelpers";
+
+export default async function HeroSection() {
+  const { items } = await articleService.getAll({
+    pageNumber: 1,
+    pageSize: 4,
+    sortBy: "publishedAt",
+    sortOrder: "desc",
+  });
+
+  const featuredArticle = items[0];
+  const sidebarArticles = items.slice(1, 4);
 
   if (!featuredArticle) return null;
 
@@ -17,11 +32,11 @@ export default function HeroSection() {
         <div className="grid gap-10 lg:grid-cols-12">
           {/* Main Hero Story */}
           <article className="group relative flex flex-col justify-between overflow-hidden rounded-lg border border-border bg-card p-6 md:p-8 lg:col-span-8 hover:border-accent transition-all duration-300">
-            <Link href={`/${featuredArticle.category.slug}/${featuredArticle.slug}`} className="flex flex-col gap-6">
+            <Link href={getArticleUrl(featuredArticle)} className="flex flex-col gap-6">
               {/* Image Container with Custom Ratio */}
               <div className="relative aspect-[16/9] w-full overflow-hidden rounded-md bg-muted">
                 <Image
-                  src={featuredArticle.coverImage ?? "/images/placeholder.jpg"}
+                  src={getArticleCoverImage(featuredArticle)}
                   alt={featuredArticle.title}
                   fill
                   priority
@@ -41,7 +56,7 @@ export default function HeroSection() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-accent">
-                    {featuredArticle.category.name}
+                    {featuredArticle.category?.name}
                   </span>
                 </div>
 
@@ -50,23 +65,23 @@ export default function HeroSection() {
                 </h1>
 
                 <p className="font-sans text-base leading-7 text-muted-foreground line-clamp-3">
-                  {featuredArticle.excerpt}
+                  {getArticleExcerpt(featuredArticle)}
                 </p>
 
                 {/* Metadata Row */}
                 <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-border/80 font-mono text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">
-                    {featuredArticle.author.name} {featuredArticle.author.surname}
+                    {getAuthorFullName(featuredArticle.author)}
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    {featuredArticle.publishedAt 
-                      ? new Date(featuredArticle.publishedAt).toLocaleDateString("az-AZ") 
+                    {featuredArticle.publishedAt
+                      ? new Date(featuredArticle.publishedAt).toLocaleDateString("az-AZ")
                       : "-"}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    {featuredArticle.readingTime} DƏQ
+                    {getArticleReadingTime(featuredArticle)} DƏQ
                   </span>
                   <span className="flex items-center gap-1 ml-auto">
                     <Eye className="h-3.5 w-3.5" />
@@ -87,22 +102,17 @@ export default function HeroSection() {
             </div>
 
             <div className="flex flex-col gap-5">
-              {sidebarArticles.map((article, idx) => (
+              {sidebarArticles.map((article) => (
                 <Link
                   key={article.id}
-                  href={`/${article.category.slug}/${article.slug}`}
+                  href={getArticleUrl(article)}
                   className="group relative flex flex-col justify-between rounded-lg border border-border bg-card p-5 hover:border-accent transition-all duration-300"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-accent">
-                        {article.category.name}
+                        {article.category?.name}
                       </span>
-                      {article.isBreaking && (
-                        <span className="rounded bg-red-500/10 px-2 py-0.5 font-mono text-[9px] font-bold text-red-500">
-                          TƏCİLİ
-                        </span>
-                      )}
                     </div>
 
                     <h3 className="font-sans text-base font-bold leading-snug text-foreground group-hover:text-accent transition-colors duration-200 line-clamp-3">
@@ -112,9 +122,9 @@ export default function HeroSection() {
 
                   <div className="mt-5 flex items-center gap-4 border-t border-border/60 pt-3 font-mono text-[10px] text-muted-foreground">
                     <span className="font-semibold text-foreground">
-                      {article.author.name.charAt(0)}. {article.author.surname}
+                      {getAuthorFullName(article.author)}
                     </span>
-                    <span>{article.readingTime} DƏQ</span>
+                    <span>{getArticleReadingTime(article)} DƏQ</span>
                   </div>
                 </Link>
               ))}

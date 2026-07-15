@@ -4,3 +4,4 @@ export * from "./formatNumber";
 export * from "./readingTime";
 export * from "./slugify";
 export * from "./truncate";
+export * from "./publicHelpers";

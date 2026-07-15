@@ -2,8 +2,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { popularArticles } from "@/mocks/articles/popular";
 import { TrendingUp, Clock, Eye } from "lucide-react";
+import { useArticles } from "@/hooks/useArticles";
+import { ArticleStatus } from "@/types/article";
+import {
+  getArticleReadingTime,
+  getArticleUrl,
+  getAuthorFullName,
+} from "@/utils/publicHelpers";
 
 type Range = "today" | "week" | "month" | "all";
 
@@ -14,32 +20,34 @@ const tabs: { key: Range; label: string }[] = [
   { key: "all", label: "Bütün vaxtlar" },
 ];
 
+function getStartDate(range: Range): string | undefined {
+  if (range === "all") return undefined;
+
+  const now = new Date();
+  const days = range === "today" ? 1 : range === "week" ? 7 : 30;
+  const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+  return start.toISOString();
+}
+
 export default function MostReadSection() {
   const [active, setActive] = useState<Range>("today");
 
-  const articles = useMemo(() => {
-    switch (active) {
-      case "today":
-        return popularArticles.slice(0, 5);
+  const filter = useMemo(
+    () => ({
+      pageNumber: 1,
+      pageSize: 5,
+      sortBy: "viewCount",
+      sortOrder: "desc" as const,
+      startDate: getStartDate(active),
+    }),
+    [active]
+  );
 
-      case "week":
-        return [...popularArticles]
-          .sort((a, b) => b.viewCount - a.viewCount)
-          .slice(0, 5);
+  const { data, isLoading } = useArticles(filter);
+  const articles = data?.items ?? [];
 
-      case "month":
-        return [...popularArticles]
-          .sort((a, b) => b.viewCount - a.viewCount)
-          .slice(1, 6);
-
-      case "all":
-        return [...popularArticles]
-          .sort((a, b) => b.viewCount - a.viewCount);
-
-      default:
-        return popularArticles;
-    }
-  }, [active]);
+  if (!isLoading && articles.length === 0) return null;
 
   return (
     <section className="py-14 lg:py-20 border-t border-border bg-background transition-colors duration-300">
@@ -51,9 +59,7 @@ export default function MostReadSection() {
               <TrendingUp className="h-4 w-4" />
               Bazar Trendləri
             </span>
-            <h2 className="mt-2 text-3xl font-black text-foreground">
-              Ən çox oxunanlar
-            </h2>
+            <h2 className="mt-2 text-3xl font-black text-foreground">Ən çox oxunanlar</h2>
           </div>
 
           {/* Custom Tabs */}
@@ -79,7 +85,7 @@ export default function MostReadSection() {
           {articles.map((article, index) => (
             <Link
               key={article.id}
-              href={`/${article.category.slug}/${article.slug}`}
+              href={getArticleUrl(article)}
               className="group flex items-start gap-6 bg-card p-6 hover:bg-secondary/40 transition-colors duration-200"
             >
               {/* Number Index */}
@@ -90,7 +96,7 @@ export default function MostReadSection() {
               {/* Story Description */}
               <div className="min-w-0 flex-1 space-y-2">
                 <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-accent block">
-                  {article.category.name}
+                  {article.category?.name}
                 </span>
 
                 <h3 className="font-sans text-base font-bold leading-snug text-foreground group-hover:text-accent transition-colors duration-200 line-clamp-2">
@@ -99,11 +105,11 @@ export default function MostReadSection() {
 
                 <div className="flex flex-wrap items-center gap-4 pt-1 font-mono text-[10px] text-muted-foreground">
                   <span className="font-semibold text-foreground">
-                    {article.author.name} {article.author.surname}
+                    {getAuthorFullName(article.author)}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    {article.readingTime} DƏQ
+                    {getArticleReadingTime(article)} DƏQ
                   </span>
                   <span className="flex items-center gap-1 ml-auto">
                     <Eye className="h-3.5 w-3.5" />

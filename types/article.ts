@@ -8,21 +8,15 @@ export type { Tag } from "./tag";
 // These are placeholder orderings based on typical CMS workflows.
 export enum ArticleStatus {
   DRAFT = 0,
-  IN_REVIEW = 1,
-  REVISION_REQUESTED = 2,
-  APPROVED = 3,
-  SCHEDULED = 4,
-  PUBLISHED = 5,
-  ARCHIVED = 6,
-  REJECTED = 7,
+  PUBLISHED = 2,
 }
 
 // TODO: confirm actual numeric values with the backend.
 export enum ContentType {
-  ARTICLE = 0,
-  NEWS = 1,
-  OPINION = 2,
-  VIDEO = 3,
+  ARTICLE ,
+  NEWS ,
+  OPINION ,
+  VIDEO ,
 }
 
 export interface Article extends BaseEntity {

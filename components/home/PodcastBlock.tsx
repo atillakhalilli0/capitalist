@@ -15,18 +15,16 @@ import { usePodcasts } from "@/hooks/usePodcasts";
 export default function PodcastBlock() {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const {
-    data,
-    isLoading,
-  } = usePodcasts({
-    page: 1,
-    pageSize: 4,
-  });
+  const { data, isLoading } = usePodcasts();
 
-  const podcasts = data?.items ?? [];
+  const podcasts = (data ?? []).filter((podcast) => podcast.isActive).slice(0, 4);
 
   const featured = podcasts[0];
   const episodes = podcasts.slice(1, 4);
+
+  if (!isLoading && !featured) return null;
+
+  if (!featured) return null;
 
   return (
     <section className="border-t border-border bg-card/15 py-16 transition-colors duration-300">

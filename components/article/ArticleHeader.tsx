@@ -1,19 +1,32 @@
 import Image from "next/image";
 import { Clock, Eye, Calendar } from "lucide-react";
 import type { Article } from "@/types/article";
+import {
+  getArticleCoverImage,
+  getArticleReadingTime,
+  getAuthorAvatar,
+  getAuthorFullName,
+  getAuthorRoleLabel,
+} from "@/utils/publicHelpers";
 
 type ArticleHeaderProps = {
   article: Article;
 };
 
 export default function ArticleHeader({ article }: ArticleHeaderProps) {
+  const readingTime = getArticleReadingTime(article);
+  const authorName = getAuthorFullName(article.author);
+  const authorAvatar = getAuthorAvatar(article.author);
+  const authorRole = getAuthorRoleLabel(article.author);
+  const coverImage = article.coverImageUrl ? getArticleCoverImage(article) : null;
+
   return (
     <header className="border-b border-border bg-card/15 py-12 transition-colors duration-300">
       <div className="mx-auto max-w-4xl px-4 space-y-6">
         {/* Category badge */}
         <div>
           <span className="inline-flex rounded bg-accent/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.25em] text-accent">
-            {article.category.name}
+            {article.category?.name}
           </span>
         </div>
 
@@ -23,9 +36,9 @@ export default function ArticleHeader({ article }: ArticleHeaderProps) {
         </h1>
 
         {/* Subtitle / Dek */}
-        {article.subtitle && (
+        {article.summary && (
           <p className="font-serif text-lg leading-8 text-muted-foreground">
-            {article.subtitle}
+            {article.summary}
           </p>
         )}
 
@@ -33,21 +46,16 @@ export default function ArticleHeader({ article }: ArticleHeaderProps) {
         <div className="flex flex-col gap-6 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-muted border border-border">
-              <Image
-                src={article.author.avatar ?? "/images/avatar-placeholder.png"}
-                alt={`${article.author.name} ${article.author.surname}`}
-                fill
-                className="object-cover"
-              />
+              <Image src={authorAvatar} alt={authorName} fill className="object-cover" />
             </div>
 
             <div>
-              <h3 className="text-sm font-bold text-foreground">
-                {article.author.name} {article.author.surname}
-              </h3>
-              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
-                {article.author.role.replaceAll("_", " ")}
-              </p>
+              <h3 className="text-sm font-bold text-foreground">{authorName}</h3>
+              {authorRole && (
+                <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+                  {authorRole}
+                </p>
+              )}
             </div>
           </div>
 
@@ -67,7 +75,7 @@ export default function ArticleHeader({ article }: ArticleHeaderProps) {
 
             <div className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
-              <span>{article.readingTime ?? 0} dəq oxu</span>
+              <span>{readingTime} dəq oxu</span>
             </div>
 
             <div className="flex items-center gap-1.5">
@@ -78,10 +86,10 @@ export default function ArticleHeader({ article }: ArticleHeaderProps) {
         </div>
 
         {/* Cover Image */}
-        {article.coverImage && (
+        {coverImage && (
           <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-md border border-border bg-muted">
             <Image
-              src={article.coverImage}
+              src={coverImage}
               alt={article.title}
               fill
               priority
