@@ -1,13 +1,9 @@
 "use client";
 
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { tagService } from "@/services/tag.service";
-import type { Tag } from "@/types/article";
+import type { CreateTagRequest, UpdateTagRequest } from "@/types/tag";
 
 const QUERY_KEY = "tags";
 
@@ -26,31 +22,13 @@ export function useTag(id?: string) {
   });
 }
 
-export function useTagBySlug(slug?: string) {
-  return useQuery({
-    queryKey: [QUERY_KEY, "slug", slug],
-    queryFn: () => tagService.getBySlug(slug!),
-    enabled: !!slug,
-  });
-}
-
-export function useTagList() {
-  return useQuery({
-    queryKey: [QUERY_KEY, "list"],
-    queryFn: () => tagService.getList(),
-  });
-}
-
 export function useCreateTag() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { name: string }) => tagService.create(data),
-
+    mutationFn: (data: CreateTagRequest) => tagService.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }
@@ -59,22 +37,11 @@ export function useUpdateTag() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: { name: string };
-    }) => tagService.update(id, data),
-
+    mutationFn: ({ id, data }: { id: string; data: UpdateTagRequest }) =>
+      tagService.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY, variables.id],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, variables.id] });
     },
   });
 }
@@ -84,11 +51,8 @@ export function useDeleteTag() {
 
   return useMutation({
     mutationFn: (id: string) => tagService.remove(id),
-
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }

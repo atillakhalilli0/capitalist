@@ -1,15 +1,14 @@
 import BaseService from "./base.service";
-
 import type {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
   RefreshTokenRequest,
   RefreshTokenResponse,
+  LogoutRequest,
   ChangePasswordRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
-  UserProfile,
 } from "@/types/auth";
 
 class AuthService extends BaseService {
@@ -22,39 +21,25 @@ class AuthService extends BaseService {
   }
 
   refreshToken(data: RefreshTokenRequest) {
-    return this.post<RefreshTokenResponse>("/Auth/refresh", {
-      refreshToken: data.refreshToken,
-    });
+    return this.post<RefreshTokenResponse>("/Auth/refresh", data);
   }
 
-  logout() {
-    return Promise.resolve();
-  }
-
-  me() {
-    return this.get<UserProfile>("/Users/profile");
+  logout(data: LogoutRequest) {
+    return this.post<void>("/Auth/logout", data);
   }
 
   changePassword(data: ChangePasswordRequest) {
-    return this.post<void>(
-      "/auth/change-password",
-      data
-    );
+    return this.post<void>("/Auth/change-password", data);
   }
 
   forgotPassword(data: ForgotPasswordRequest) {
-    return this.post<void>(
-      "/auth/forgot-password",
-      data
-    );
+    return this.post<void>("/Auth/forgot-password", data);
   }
 
   resetPassword(data: ResetPasswordRequest) {
-    return this.post<void>(
-      "/auth/reset-password",
-      data
-    );
+    return this.post<void>("/Auth/reset-password", data);
   }
 }
 
 export const authService = new AuthService();
+export default AuthService;

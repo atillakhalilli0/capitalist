@@ -1,48 +1,19 @@
 import BaseService from "./base.service";
 import type {
   Podcast,
-  PaginatedResponse,
-  PaginationParams,
-} from "@/types";
-
-export interface CreatePodcastRequest {
-  title: string;
-  description: string;
-  hostName: string;
-  rssFeedUrl?: string | null;
-  coverImageId?: string | null;
-}
-
-export interface UpdatePodcastRequest
-  extends Partial<CreatePodcastRequest> {}
+  PodcastEpisode,
+  CreatePodcastRequest,
+  UpdatePodcastRequest,
+  CreateEpisodeRequest,
+} from "@/types/podcast";
 
 class PodcastService extends BaseService {
-  async getPublished(
-    params?: PaginationParams
-  ): Promise<PaginatedResponse<Podcast>> {
-    return this.get<PaginatedResponse<Podcast>>(
-      "/Podcasts",
-      {
-        params,
-      }
-    );
+  getAll() {
+    return this.get<Podcast[]>("/Podcasts");
   }
 
-  async getAll(params?: PaginationParams) {
-    return this.getPublished(params);
-  }
-
-  async getList() {
-    const res = await this.getPublished();
-    return res.items;
-  }
-
-  async getById(id: string) {
+  getById(id: string) {
     return this.get<Podcast>(`/Podcasts/${id}`);
-  }
-
-  async getBySlug(slug: string) {
-    return this.get<Podcast>(`/Podcasts/slug/${slug}`);
   }
 
   create(data: CreatePodcastRequest) {
@@ -50,13 +21,20 @@ class PodcastService extends BaseService {
   }
 
   update(id: string, data: UpdatePodcastRequest) {
-    return this.put<Podcast>(`/Podcasts/${id}`, data);
+    return this.put<Podcast>(`/Podcasts/${id}`, { id, ...data });
   }
 
   remove(id: string) {
-    return this.delete(`/Podcasts/${id}`);
+    return this.delete<void>(`/Podcasts/${id}`);
+  }
+
+  addEpisode(podcastId: string, data: CreateEpisodeRequest) {
+    return this.post<PodcastEpisode>(`/Podcasts/${podcastId}/episodes`, {
+      podcastId,
+      ...data,
+    });
   }
 }
 
 export const podcastService = new PodcastService();
-export default podcastService;
+export default PodcastService;

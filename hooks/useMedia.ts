@@ -1,20 +1,13 @@
 "use client";
 
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { mediaService } from "@/services/media.service";
+import type { MediaFilter } from "@/types/media";
 
 const QUERY_KEY = "media";
 
-export function useMedia(params?: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-}) {
+export function useMedia(params?: MediaFilter) {
   return useQuery({
     queryKey: [QUERY_KEY, params],
     queryFn: () => mediaService.getAll(params),
@@ -33,13 +26,10 @@ export function useUploadMedia() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (file: File) =>
-      mediaService.upload(file),
-
+    mutationFn: ({ file, altText }: { file: File; altText?: string }) =>
+      mediaService.upload(file, altText),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }
@@ -48,13 +38,9 @@ export function useUploadManyMedia() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (files: File[]) =>
-      mediaService.uploadMany(files),
-
+    mutationFn: (files: File[]) => mediaService.uploadMany(files),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }
@@ -63,13 +49,9 @@ export function useDeleteMedia() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) =>
-      mediaService.remove(id),
-
+    mutationFn: (id: string) => mediaService.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }

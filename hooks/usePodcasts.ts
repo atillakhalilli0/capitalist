@@ -1,27 +1,20 @@
 "use client";
 
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import {
-  podcastService,
-  type CreatePodcastRequest,
-  type UpdatePodcastRequest,
-} from "@/services/podcast.service";
+import { podcastService } from "@/services/podcast.service";
+import type {
+  CreatePodcastRequest,
+  UpdatePodcastRequest,
+  CreateEpisodeRequest,
+} from "@/types/podcast";
 
 const QUERY_KEY = "podcasts";
 
-export function usePodcasts(params?: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-}) {
+export function usePodcasts() {
   return useQuery({
-    queryKey: [QUERY_KEY, params],
-    queryFn: () => podcastService.getAll(params),
+    queryKey: [QUERY_KEY],
+    queryFn: () => podcastService.getAll(),
   });
 }
 
@@ -33,25 +26,13 @@ export function usePodcast(id?: string) {
   });
 }
 
-export function usePodcastBySlug(slug?: string) {
-  return useQuery({
-    queryKey: [QUERY_KEY, "slug", slug],
-    queryFn: () => podcastService.getBySlug(slug!),
-    enabled: !!slug,
-  });
-}
-
 export function useCreatePodcast() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreatePodcastRequest) =>
-      podcastService.create(data),
-
+    mutationFn: (data: CreatePodcastRequest) => podcastService.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }
@@ -60,22 +41,11 @@ export function useUpdatePodcast() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdatePodcastRequest;
-    }) => podcastService.update(id, data),
-
+    mutationFn: ({ id, data }: { id: string; data: UpdatePodcastRequest }) =>
+      podcastService.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY, variables.id],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, variables.id] });
     },
   });
 }
@@ -84,13 +54,21 @@ export function useDeletePodcast() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) =>
-      podcastService.remove(id),
-
+    mutationFn: (id: string) => podcastService.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function useAddEpisode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ podcastId, data }: { podcastId: string; data: CreateEpisodeRequest }) =>
+      podcastService.addEpisode(podcastId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, variables.podcastId] });
     },
   });
 }

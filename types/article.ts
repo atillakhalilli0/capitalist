@@ -1,122 +1,103 @@
-import type { BaseEntity, SeoMetadata } from "./common";
+import type { BaseEntity } from "./common";
 import type { Category } from "./category";
 import type { User } from "./user";
 
+export type { Tag } from "./tag";
+
+// TODO: confirm actual numeric values with the backend (schema only says "type: integer").
+// These are placeholder orderings based on typical CMS workflows.
 export enum ArticleStatus {
-  DRAFT = "DRAFT",
-  IN_REVIEW = "IN_REVIEW",
-  REVISION_REQUESTED = "REVISION_REQUESTED",
-  APPROVED = "APPROVED",
-  SCHEDULED = "SCHEDULED",
-  PUBLISHED = "PUBLISHED",
-  ARCHIVED = "ARCHIVED",
-  REJECTED = "REJECTED",
+  DRAFT = 0,
+  IN_REVIEW = 1,
+  REVISION_REQUESTED = 2,
+  APPROVED = 3,
+  SCHEDULED = 4,
+  PUBLISHED = 5,
+  ARCHIVED = 6,
+  REJECTED = 7,
 }
 
-export interface Tag extends BaseEntity {
-  name: string;
-  slug: string;
-  description?: string;
-}
-
-export interface ArticleContent {
-  type: string;
-  content?: ArticleContent[];
-  attrs?: Record<string, unknown>;
-  text?: string;
+// TODO: confirm actual numeric values with the backend.
+export enum ContentType {
+  ARTICLE = 0,
+  NEWS = 1,
+  OPINION = 2,
+  VIDEO = 3,
 }
 
 export interface Article extends BaseEntity {
   title: string;
   slug: string;
-
-  subtitle?: string;
-
-  excerpt?: string;
-
-  content: ArticleContent | string;
-
-  coverImage?: string;
-
+  content: string;
+  summary?: string | null;
+  contentType: ContentType;
   author: User;
-
-  editor?: User;
-
+  editor?: User | null;
   category: Category;
-
-  tags: Tag[];
-
+  coverImageId?: string | null;
+  coverImageUrl?: string | null;
+  sponsorId?: string | null;
+  tags: string[];
   status: ArticleStatus;
-
-  readingTime?: number;
-
   viewCount: number;
-
-  isFeatured: boolean;
-
-  isBreaking: boolean;
-
-  publishedAt?: string;
-
-  scheduledAt?: string;
-
-  seo: SeoMetadata;
+  publishedAt?: string | null;
 }
 
+export interface ArticleVersion {
+  versionNumber: number;
+  title: string;
+  content: string;
+  editorId: string;
+  changeNote?: string | null;
+  createdAt: string;
+}
+
+/** Matches backend's CreateArticleCommand exactly. */
 export interface CreateArticleRequest {
   title: string;
-  slug: string;
-
-  subtitle?: string;
-
-  excerpt?: string;
-
   content: string;
-
-  coverImage?: string;
-
+  summary?: string | null;
+  contentType: ContentType;
+  authorId: string;
   categoryId: string;
-
-  tagIds: string[];
-
-  status: ArticleStatus;
-
-  isFeatured: boolean;
-
-  isBreaking: boolean;
-
-  publishedAt?: string;
-
-  scheduledAt?: string;
-
-  seo: SeoMetadata;
+  coverImageId?: string | null;
+  sponsorId?: string | null;
+  tags: string[];
 }
 
-export interface UpdateArticleRequest
-  extends Partial<CreateArticleRequest> {}
+/** Matches backend's UpdateArticleCommand exactly (id is set from the URL param, not the body, when calling the service). */
+export interface UpdateArticleRequest {
+  title: string;
+  content: string;
+  summary?: string | null;
+  categoryId: string;
+  coverImageId?: string | null;
+  sponsorId?: string | null;
+  tags: string[];
+  editorId: string;
+  changeNote?: string | null;
+}
 
-// NOTE: field names must match the backend's actual query parameters
-// (see GET /api/Articles in the swagger doc) or ASP.NET will silently
-// ignore them and fall back to defaults.
+export interface PublishArticleRequest {
+  publish: boolean;
+}
+
+export interface RollbackArticleRequest {
+  versionNumber: number;
+}
+
+/** Field names must match GET /api/Articles query params exactly (ASP.NET model binding is case-insensitive, but keep names 1:1). */
 export interface ArticleFilter {
   pageNumber?: number;
   pageSize?: number;
-
-  searchQuery?: string;
-
-  categoryId?: string;
-
-  tagSlug?: string;
-
-  status?: ArticleStatus;
-
-  isSponsored?: boolean;
-
-  startDate?: string;
-
-  endDate?: string;
-
   sortBy?: string;
-
   sortOrder?: "asc" | "desc";
+  searchQuery?: string;
+  categoryId?: string;
+  tagSlug?: string;
+  contentType?: ContentType;
+  status?: ArticleStatus;
+  isSponsored?: boolean;
+  startDate?: string;
+  endDate?: string;
 }

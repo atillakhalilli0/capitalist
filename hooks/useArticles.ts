@@ -1,43 +1,30 @@
 "use client";
 
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { articleService } from "@/services/article.service";
-
+import { ArticleStatus } from "@/types/article";
 import type {
   ArticleFilter,
   CreateArticleRequest,
   UpdateArticleRequest,
+  PublishArticleRequest,
+  RollbackArticleRequest,
 } from "@/types/article";
-import { ArticleStatus } from "@/types/article";
 
 const QUERY_KEY = "articles";
 
 // The backend has no dedicated dashboard/stats endpoint, so this derives
-// the numbers from GET /api/Articles instead. pageSize: 1 is enough to
-// read `totalCount` for each status without pulling the full list.
-// totalViews is a best-effort sum over the published page we already have;
-// swap this for a real aggregate endpoint if/when the backend adds one.
+// the numbers from GET /api/Articles. pageSize: 1 is enough to read
+// `totalCount` per status without pulling the full list.
 export function useDashboardStats() {
   return useQuery({
     queryKey: [QUERY_KEY, "dashboard-stats"],
     queryFn: async () => {
       const [all, published, draft] = await Promise.all([
         articleService.getAll({ pageNumber: 1, pageSize: 1 }),
-        articleService.getAll({
-          pageNumber: 1,
-          pageSize: 1,
-          status: ArticleStatus.PUBLISHED,
-        }),
-        articleService.getAll({
-          pageNumber: 1,
-          pageSize: 1,
-          status: ArticleStatus.DRAFT,
-        }),
+        articleService.getAll({ pageNumber: 1, pageSize: 1, status: ArticleStatus.PUBLISHED }),
+        articleService.getAll({ pageNumber: 1, pageSize: 1, status: ArticleStatus.DRAFT }),
       ]);
 
       const publishedArticles = await articleService.getAll({
@@ -61,37 +48,26 @@ export function useDashboardStats() {
   });
 }
 
-export function useArticles(
-  params?: ArticleFilter
-) {
+export function useArticles(params?: ArticleFilter) {
   return useQuery({
     queryKey: [QUERY_KEY, params],
-    queryFn: () =>
-      articleService.getAll(params),
+    queryFn: () => articleService.getAll(params),
   });
 }
 
 export function useArticle(id?: string) {
   return useQuery({
     queryKey: [QUERY_KEY, id],
-    queryFn: () =>
-      articleService.getById(id!),
+    queryFn: () => articleService.getById(id!),
     enabled: !!id,
   });
 }
 
-export function useArticleBySlug(
-  slug?: string
-) {
+export function useArticleVersions(id?: string) {
   return useQuery({
-    queryKey: [
-      QUERY_KEY,
-      "slug",
-      slug,
-    ],
-    queryFn: () =>
-      articleService.getBySlug(slug!),
-    enabled: !!slug,
+    queryKey: [QUERY_KEY, id, "versions"],
+    queryFn: () => articleService.getVersions(id!),
+    enabled: !!id,
   });
 }
 
@@ -99,14 +75,9 @@ export function useCreateArticle() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (
-      data: CreateArticleRequest
-    ) => articleService.create(data),
-
+    mutationFn: (data: CreateArticleRequest) => articleService.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
     },
   });
 }
@@ -115,29 +86,11 @@ export function useUpdateArticle() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdateArticleRequest;
-    }) =>
-      articleService.update(
-        id,
-        data
-      ),
-
+    mutationFn: ({ id, data }: { id: string; data: UpdateArticleRequest }) =>
+      articleService.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [
-          QUERY_KEY,
-          variables.id,
-        ],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, variables.id] });
     },
   });
 }
@@ -146,13 +99,35 @@ export function useDeleteArticle() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) =>
-      articleService.remove(id),
-
+    mutationFn: (id: string) => articleService.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY],
-      });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+export function usePublishArticle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: PublishArticleRequest }) =>
+      articleService.publish(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, variables.id] });
+    },
+  });
+}
+
+export function useRollbackArticle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: RollbackArticleRequest }) =>
+      articleService.rollback(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, variables.id] });
     },
   });
 }
