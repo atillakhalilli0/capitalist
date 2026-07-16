@@ -11,6 +11,7 @@ import {
   FileStack,
   Tags,
   Settings,
+  UserCircle,
   LogOut,
   Loader2,
 } from "lucide-react";
@@ -19,16 +20,17 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/authStore";
+import { PERMISSIONS, hasPermission } from "@/constants/roles";
 
 const items = [
-  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { title: "Məqalələr", href: "/admin/articles", icon: Newspaper },
-  { title: "Kateqoriyalar", href: "/admin/categories", icon: FolderTree },
-  { title: "Teqlər", href: "/admin/tags", icon: Tags },
-  { title: "Müəlliflər", href: "/admin/users", icon: Users },
-  { title: "Podkastlar", href: "/admin/podcasts", icon: Mic2 },
-  { title: "Xüsusi layihələr", href: "/admin/projects", icon: FileStack },
-  { title: "Parametrlər", href: "/admin/settings", icon: Settings },
+  { title: "Dashboard", href: "/admin", icon: LayoutDashboard, permission: null },
+  { title: "Məqalələr", href: "/admin/articles", icon: Newspaper, permission: PERMISSIONS.ARTICLES },
+  { title: "Kateqoriyalar", href: "/admin/categories", icon: FolderTree, permission: PERMISSIONS.CATEGORIES },
+  { title: "Teqlər", href: "/admin/tags", icon: Tags, permission: PERMISSIONS.TAGS },
+  { title: "Müəlliflər", href: "/admin/users", icon: Users, permission: PERMISSIONS.USERS },
+  { title: "Podkastlar", href: "/admin/podcasts", icon: Mic2, permission: PERMISSIONS.PODCASTS },
+  { title: "Xüsusi layihələr", href: "/admin/projects", icon: FileStack, permission: PERMISSIONS.PROJECTS },
+  { title: "Parametrlər", href: "/admin/settings", icon: Settings, permission: null },
 ];
 
 export default function AdminSidebar() {
@@ -36,12 +38,13 @@ export default function AdminSidebar() {
   const router = useRouter();
 
   const { mutate: logoutRequest, isPending } = useLogout();
-  const { refreshToken, logout: clearLocalAuth } = useAuthStore();
+  const { refreshToken, user, logout: clearLocalAuth } = useAuthStore();
+
+  const visibleItems = items.filter(
+    (item) => item.permission === null || hasPermission(user?.roleName, item.permission)
+  );
 
   const handleLogout = () => {
-    // Best-effort call to the backend (revokes the refresh token server-side).
-    // We clear local auth regardless of whether this call succeeds, so the
-    // admin is never stuck logged-in on the client after clicking logout.
     logoutRequest(
       { refreshToken: refreshToken || "" },
       {
@@ -55,7 +58,7 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside className="flex  h-screen w-72 flex-col border-r border-border bg-card">
+    <aside className="flex h-screen w-72 flex-col border-r border-border bg-card">
       <div className="border-b border-border px-6 py-6">
         <Link href="/admin" className="text-2xl font-black tracking-tight">
           Capitalist
@@ -66,7 +69,7 @@ export default function AdminSidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
 
@@ -86,6 +89,19 @@ export default function AdminSidebar() {
             </Link>
           );
         })}
+
+        <Link
+          href="/admin/profile"
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition",
+            pathname === "/admin/profile"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          <UserCircle className="h-5 w-5" />
+          Profil
+        </Link>
       </nav>
 
       <div className="border-t border-border p-4">
